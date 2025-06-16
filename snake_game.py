@@ -1,5 +1,6 @@
 import pygame as pg
 import sys
+import random
 
 # --- Constants ---
 SCREEN_WIDTH = 600
@@ -17,15 +18,13 @@ GREEN = (0, 150, 0)
 DARK_GREEN = (0, 100, 0)
 RED = (200, 0, 0)
 BLACK = (0, 0, 0)
-GRID_COLOR = (40, 40, 40) # YENİ: Grid çizgileri için renk
+GRID_COLOR = (40, 40, 40)
 
-# YENİ: Grid çizme fonksiyonu
 def draw_grid(surface):
-    """Ekrana oyun ızgarasını çizer."""
-    # Dikey çizgiler
+    # vertical lines
     for x in range(0, SCREEN_WIDTH, GRID_SIZE):
         pg.draw.line(surface, GRID_COLOR, (x, 0), (x, SCREEN_HEIGHT))
-    # Yatay çizgiler
+    # horizontal lines
     for y in range(0, SCREEN_HEIGHT, GRID_SIZE):
         pg.draw.line(surface, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
 
@@ -42,6 +41,7 @@ def main():
         def __init__(self):
             self.body_grid = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
             self.direction = (1, 0)
+            self.is_growing = False
 
             start_pixel_pos = pg.Vector2(self.body_grid[0]) * GRID_SIZE
             self.body_pixels = [start_pixel_pos]
@@ -59,12 +59,17 @@ def main():
                 return False
 
             self.body_grid.insert(0, new_head)
-            self.body_pixels.insert(0, self.body_pixels[0].copy())
 
-            self.body_grid.pop()
-            self.body_pixels.pop()
+            if self.is_growing:
+                self.is_growing = False
+                self.body_pixels.append(self.body_pixels[-1].copy())
+            else:
+                self.body_grid.pop()
 
             return True
+        
+        def grow(self):
+            self.is_growing = True
 
         def animate(self):
             for i in range(len(self.body_pixels)):
@@ -81,8 +86,25 @@ def main():
                 segment_rect = pg.Rect(segment_pos, (GRID_SIZE, GRID_SIZE))
                 pg.draw.rect(surface, DARK_GREEN, segment_rect)
 
+    class Food:
+        def __init__(self, snake_body):
+            self.ramdomize_position(snake_body)
+        def ramdomize_position(self, snake_body):
+            while True:
+                self.position = (random.randint(0, GRID_WIDTH - 1), 
+                                 random.randint(0, GRID_HEIGHT - 1))
+                if self.position not in snake_body:
+                    break
+
+        def draw(self, surface):
+            rect = pg.Rect(self.position[0] * GRID_SIZE,
+                           self.position[1] * GRID_SIZE,
+                           GRID_SIZE, GRID_SIZE)
+            pg.draw.rect(surface, RED, rect)
 
     snake = Snake()
+    food = Food(snake.body_grid)
+
     frame_count = 0
 
     while not game_over:
@@ -104,15 +126,18 @@ def main():
             frame_count = 0
             if not snake.front_fonction():
                 game_over = True
+
+        if snake.body_grid[0] == food.position:
+            snake.grow()
+            food.ramdomize_position(snake.body_grid)
         
-        # --- ÇİZİM BÖLÜMÜ ---
         screen.fill(BLACK)
 
-        # YENİ: Grid'i yılanın arkasına çiz
         draw_grid(screen)
 
         snake.animate()
         snake.draw(screen)
+        food.draw(screen)
 
         pg.display.flip()
         clock.tick(60)
