@@ -10,7 +10,7 @@ GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 
 # How many screen frames it takes for the snake to move one square.
-FRAMES_PER_MOVE = 8
+FRAMES_PER_MOVE = 6
 
 # Colors
 WHITE = (255, 255, 255)
@@ -20,13 +20,6 @@ RED = (200, 0, 0)
 BLACK = (0, 0, 0)
 GRID_COLOR = (40, 40, 40)
 
-def draw_grid(surface):
-    # vertical lines
-    for x in range(0, SCREEN_WIDTH, GRID_SIZE):
-        pg.draw.line(surface, GRID_COLOR, (x, 0), (x, SCREEN_HEIGHT))
-    # horizontal lines
-    for y in range(0, SCREEN_HEIGHT, GRID_SIZE):
-        pg.draw.line(surface, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
 
 def main():
     pg.init()
@@ -37,22 +30,33 @@ def main():
     clock = pg.time.Clock()
     game_over = False
 
+    def draw_grid(surface):
+        # vertical lines
+        for x in range(0, SCREEN_WIDTH, GRID_SIZE):
+            pg.draw.line(surface, GRID_COLOR, (x, 0), (x, SCREEN_HEIGHT))
+        # horizontal lines
+        for y in range(0, SCREEN_HEIGHT, GRID_SIZE):
+            pg.draw.line(surface, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
     class Snake:
         def __init__(self):
             self.body_grid = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
             self.direction = (1, 0)
+            self.l_direction = (1, 0)  # last direction
             self.is_growing = False
 
             start_pixel_pos = pg.Vector2(self.body_grid[0]) * GRID_SIZE
             self.body_pixels = [start_pixel_pos]
 
         def change_direction(self, new_direction):
-            if (new_direction[0] * -1, new_direction[1] * -1) != self.direction:
+            if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction:
                 self.direction = new_direction
 
         def front_fonction(self):
+            self.l_direction = self.direction
+
             head_x, head_y = self.body_grid[0]
             dir_x, dir_y = self.direction
+
             new_head = ((head_x + dir_x) % GRID_WIDTH, (head_y + dir_y) % GRID_HEIGHT)
 
             if new_head in self.body_grid[1:]:
@@ -75,6 +79,7 @@ def main():
             for i in range(len(self.body_pixels)):
                 target_grid_pos = self.body_grid[i]
                 target_pixel_pos = pg.Vector2(target_grid_pos) * GRID_SIZE
+
                 current_pixel_pos = self.body_pixels[i]
                 self.body_pixels[i] = current_pixel_pos.lerp(target_pixel_pos, 1.0 / FRAMES_PER_MOVE)
 
