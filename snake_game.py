@@ -9,7 +9,7 @@ GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 
 # How many screen frames it takes for the snake to move one square.
-FRAMES_PER_MOVE = 5 
+FRAMES_PER_MOVE = 8
 
 # Colors
 WHITE = (255, 255, 255)
@@ -17,42 +17,106 @@ GREEN = (0, 150, 0)
 DARK_GREEN = (0, 100, 0)
 RED = (200, 0, 0)
 BLACK = (0, 0, 0)
+GRID_COLOR = (40, 40, 40) # YENİ: Grid çizgileri için renk
+
+# YENİ: Grid çizme fonksiyonu
+def draw_grid(surface):
+    """Ekrana oyun ızgarasını çizer."""
+    # Dikey çizgiler
+    for x in range(0, SCREEN_WIDTH, GRID_SIZE):
+        pg.draw.line(surface, GRID_COLOR, (x, 0), (x, SCREEN_HEIGHT))
+    # Yatay çizgiler
+    for y in range(0, SCREEN_HEIGHT, GRID_SIZE):
+        pg.draw.line(surface, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
 
 def main():
     pg.init()
 
-    screen = pg.display.set_mode((640, 480))
+    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pg.display.set_caption("Snake Game")
-    
+
     clock = pg.time.Clock()
     game_over = False
 
     class Snake:
         def __init__(self):
-
             self.body_grid = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)]
-            self.direction = (1, 0)  # Initial direction is right
+            self.direction = (1, 0)
 
             start_pixel_pos = pg.Vector2(self.body_grid[0]) * GRID_SIZE
             self.body_pixels = [start_pixel_pos]
 
         def change_direction(self, new_direction):
-            # Prevent the snake from reversing direction
-            if(new_direction[0] * -1, new_direction[1] * -1) != self.direction:
+            if (new_direction[0] * -1, new_direction[1] * -1) != self.direction:
                 self.direction = new_direction
 
+        def front_fonction(self):
+            head_x, head_y = self.body_grid[0]
+            dir_x, dir_y = self.direction
+            new_head = ((head_x + dir_x) % GRID_WIDTH, (head_y + dir_y) % GRID_HEIGHT)
 
-    
+            if new_head in self.body_grid[1:]:
+                return False
+
+            self.body_grid.insert(0, new_head)
+            self.body_pixels.insert(0, self.body_pixels[0].copy())
+
+            self.body_grid.pop()
+            self.body_pixels.pop()
+
+            return True
+
+        def animate(self):
+            for i in range(len(self.body_pixels)):
+                target_grid_pos = self.body_grid[i]
+                target_pixel_pos = pg.Vector2(target_grid_pos) * GRID_SIZE
+                current_pixel_pos = self.body_pixels[i]
+                self.body_pixels[i] = current_pixel_pos.lerp(target_pixel_pos, 1.0 / FRAMES_PER_MOVE)
+
+        def draw(self, surface):
+            head_rect = pg.Rect(self.body_pixels[0], (GRID_SIZE, GRID_SIZE))
+            pg.draw.rect(surface, GREEN, head_rect)
+
+            for segment_pos in self.body_pixels[1:]:
+                segment_rect = pg.Rect(segment_pos, (GRID_SIZE, GRID_SIZE))
+                pg.draw.rect(surface, DARK_GREEN, segment_rect)
+
+
+    snake = Snake()
+    frame_count = 0
+
     while not game_over:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 game_over = True
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_UP:
+                    snake.change_direction((0, -1))
+                elif event.key == pg.K_DOWN:
+                    snake.change_direction((0, 1))
+                elif event.key == pg.K_LEFT:
+                    snake.change_direction((-1, 0))
+                elif event.key == pg.K_RIGHT:
+                    snake.change_direction((1, 0))
+
+        frame_count += 1
+        if frame_count >= FRAMES_PER_MOVE:
+            frame_count = 0
+            if not snake.front_fonction():
+                game_over = True
         
-        screen.fill((0, 0, 0))  # Clear the screen with black
-        pg.display.flip()  # Update the display
-        
-        clock.tick(60)  # Limit to 60 frames per second
-    
+        # --- ÇİZİM BÖLÜMÜ ---
+        screen.fill(BLACK)
+
+        # YENİ: Grid'i yılanın arkasına çiz
+        draw_grid(screen)
+
+        snake.animate()
+        snake.draw(screen)
+
+        pg.display.flip()
+        clock.tick(60)
+
     pg.quit()
     sys.exit()
 
