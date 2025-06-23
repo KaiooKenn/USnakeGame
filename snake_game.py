@@ -1,17 +1,19 @@
 import pygame as pg
 import sys
-import random
+from random import randint
+import os
 
 # --- Constants ---
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
 GRID_SIZE = 50
+HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5)*2  # For the head to be larger than the body
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
+SCORE = 0
 
 # How many screen frames it takes for the snake to move one square.
-FRAMES_PER_MOVE = 10
-
+FRAMES_PER_MOVE = 8
 # Colors
 WHITE = (255, 255, 255)
 GREEN = (0, 150, 0)
@@ -22,32 +24,53 @@ GRID_COLOR = (169, 217, 131)
 
 
 def main():
+    global SCORE
+
+    def resource_path(relative_path):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
+    
     pg.init()
 
 
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pg.display.set_caption("Snake Game")
 
+    text_font = pg.font.Font(resource_path("graphs/snake_game_font.ttf"), 20)
     graphics = {
-        "background": pg.transform.scale(pg.image.load("graphs/background.png").convert(), (SCREEN_WIDTH, SCREEN_HEIGHT)),
-        "food_image": pg.transform.scale(pg.image.load("graphs/food.png").convert_alpha(), (GRID_SIZE , GRID_SIZE)),
-        "snake_head": pg.transform.scale(pg.image.load("graphs/snake_head.png").convert_alpha(), (GRID_SIZE, GRID_SIZE )),
-        "snake_body": pg.transform.scale(pg.image.load("graphs/snake_body.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_tl": pg.transform.scale(pg.image.load("graphs/corner_tl.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_tr": pg.transform.scale(pg.image.load("graphs/corner_tr.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_bl": pg.transform.scale(pg.image.load("graphs/corner_bl.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_br": pg.transform.scale(pg.image.load("graphs/corner_br.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_tail": pg.transform.scale(pg.image.load("graphs/snake_tail.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_blink0": pg.transform.scale(pg.image.load("graphs/snake_blink0.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_blink1": pg.transform.scale(pg.image.load("graphs/snake_blink1.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_see0": pg.transform.scale(pg.image.load("graphs/snake_see0.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_see1": pg.transform.scale(pg.image.load("graphs/snake_see1.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_see2": pg.transform.scale(pg.image.load("graphs/snake_see2.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_eat0": pg.transform.scale(pg.image.load("graphs/snake_eat0.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_eat1": pg.transform.scale(pg.image.load("graphs/snake_eat1.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_eat2": pg.transform.scale(pg.image.load("graphs/snake_eat2.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_eat3": pg.transform.scale(pg.image.load("graphs/snake_eat3.png").convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "snake_dead": pg.transform.scale(pg.image.load("graphs/snake_dead.png").convert_alpha(), (GRID_SIZE, GRID_SIZE))
+        "background": pg.transform.scale(pg.image.load(resource_path("graphs/background.png")).convert(), (SCREEN_WIDTH, SCREEN_HEIGHT)),
+        "food_image": pg.transform.scale(pg.image.load(resource_path("graphs/food.png")).convert_alpha(), (GRID_SIZE , GRID_SIZE)),
+        "snake_head": pg.transform.scale(pg.image.load(resource_path("graphs/snake_head.png")).convert_alpha(), (HEAD_SIZE , HEAD_SIZE )),
+        "under_head": pg.transform.scale(pg.image.load(resource_path("graphs/under_head.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE )),
+
+        "snake_body": pg.transform.scale(pg.image.load(resource_path("graphs/snake_body.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        "corner_tl": pg.transform.scale(pg.image.load(resource_path("graphs/corner_tl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        "corner_tr": pg.transform.scale(pg.image.load(resource_path("graphs/corner_tr.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        "corner_bl": pg.transform.scale(pg.image.load(resource_path("graphs/corner_bl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        "corner_br": pg.transform.scale(pg.image.load(resource_path("graphs/corner_br.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        "snake_tail": pg.transform.scale(pg.image.load(resource_path("graphs/snake_tail.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+
+        "snake_blink": [pg.transform.scale(pg.image.load(resource_path("graphs/snake_blink0.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/snake_blink1.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        "finish"],
+
+        "snake_see": [pg.transform.scale(pg.image.load(resource_path("graphs/snake_see0.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/snake_see1.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/snake_see2.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))],
+
+        "snake_eat": [pg.transform.scale(pg.image.load(resource_path("graphs/snake_eat0.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/snake_eat1.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/snake_eat2.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/snake_eat3.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+        "finish"],
+
+        "snake_dead": pg.transform.scale(pg.image.load(resource_path("graphs/snake_dead.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
     }
 
     clock = pg.time.Clock()
@@ -68,6 +91,7 @@ def main():
             self.direction = [(1, 0), (1, 0)]
             self.l_direction = (1, 0)
             self.is_growing = False
+            self.emotion = None  # Can be "blink", "see", "eat", or "dead"
             # Sync all lists at the start
             self.body_pixels = [pg.Vector2(pos) * GRID_SIZE for pos in self.body_grid]
 
@@ -81,14 +105,14 @@ def main():
             # DOWN (0, 1) -> 180 degrees
             # LEFT (-1, 0) -> 90 degrees
             if direction_vector == (1, 0):
-                return pg.transform.rotate(graphics[name], 270)
+                return pg.transform.rotate(name, 270)
             elif direction_vector == (-1, 0):
-                return pg.transform.rotate(graphics[name], 90)
+                return pg.transform.rotate(name, 90)
             elif direction_vector == (0, 1):
-                return pg.transform.rotate(graphics[name], 180)
+                return pg.transform.rotate(name, 180)
             elif direction_vector == (0, -1):
-                return pg.transform.rotate(graphics[name], 0)
-            return graphics[name]
+                return pg.transform.rotate(name, 0)
+            return name
 
         def front_fonction(self):
             self.l_direction = self.direction[0]
@@ -96,9 +120,9 @@ def main():
             dir_x, dir_y = self.direction[0]
 
             new_head = (head_x + dir_x, head_y + dir_y)
-            # Use proper boundary checks instead of wrapping with %
-            if not (0 <= new_head[0] < GRID_WIDTH and 0 <= new_head[1] < GRID_HEIGHT) or new_head in self.body_grid:
-                return False
+            # Losing conditions
+            #if not (0 <= new_head[0] < GRID_WIDTH and 0 <= new_head[1] < GRID_HEIGHT) or new_head in self.body_grid:
+            #    return False
 
             # Update all lists in sync, every time
             self.body_grid.insert(0, new_head)
@@ -106,7 +130,9 @@ def main():
             self.body_pixels.insert(0, self.body_pixels[0].copy())
 
             if self.is_growing:
+                self.emotion = "eat"
                 self.is_growing = False
+
             else:
                 self.body_grid.pop()
                 self.direction.pop()
@@ -126,23 +152,16 @@ def main():
             for i, pixel_pos in enumerate(self.body_pixels):
                 center_pos = (pixel_pos.x + GRID_SIZE / 2, pixel_pos.y + GRID_SIZE / 2)
 
-                # HEAD
-                if i == 0:
-                    rotated_image = self.rotate("snake_head", self.direction[i])
-                    rect = rotated_image.get_rect(center=center_pos)
-                    surface.blit(rotated_image, rect)
                 
                 # TAIL
-                elif i == len(self.body_pixels) - 1:
-                    # NEW LOGIC: The tail now uses its own direction from the list, like other parts.
-                    tail_direction = self.direction[i]
+                if i == len(self.body_pixels) - 1:
                     
-                    rotated_image = self.rotate("snake_tail", tail_direction)
+                    rotated_image = self.rotate(graphics["snake_tail"], self.direction[i])
                     rect = rotated_image.get_rect(center=center_pos)
                     surface.blit(rotated_image, rect)
 
                 # BODY (STRAIGHT OR CORNER)
-                else:
+                elif i != 0:
                     current_grid_pos = pg.Vector2(self.body_grid[i])
                     head_side_grid_pos = pg.Vector2(self.body_grid[i-1])
                     tail_side_grid_pos = pg.Vector2(self.body_grid[i+1])
@@ -152,7 +171,7 @@ def main():
 
                     # IF STRAIGHT
                     if vec_from_head == vec_to_tail * -1:
-                        rotated_image = self.rotate("snake_body", self.direction[i])
+                        rotated_image = self.rotate(graphics["snake_body"], self.direction[i])
                         rect = rotated_image.get_rect(center=center_pos)
                         surface.blit(rotated_image, rect)
                     
@@ -176,14 +195,60 @@ def main():
                         if image_to_draw:
                             rect = image_to_draw.get_rect(center=center_pos)
                             surface.blit(image_to_draw, rect)
- 
+            # HEAD
+            head_pixel_pos = self.body_pixels[0]
+            center_pos = (head_pixel_pos.x + GRID_SIZE / 2, head_pixel_pos.y + GRID_SIZE / 2)
+            
+            # Use self.direction[0] for the most up-to-date rotation          
+            # Draw the layers for the head
+            rotated_under_head_image = self.rotate(graphics["under_head"], self.l_direction)
+            under_rect = rotated_under_head_image.get_rect(center=center_pos)
+            surface.blit(rotated_under_head_image, under_rect)
+
+            #print(self.emotion)
+            if self.emotion:
+
+                if self.emotion == "eat":
+                    if not hasattr(self, 'event_start_time'):
+                        self.event_start_time = pg.time.get_ticks()
+                    eat_index = (pg.time.get_ticks() - self.event_start_time) // 200 % len(graphics["snake_eat"])
+                    if eat_index != 4:
+                        rotated_head_image = self.rotate(graphics["snake_eat"][eat_index], self.l_direction)
+                        surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
+                    else:
+                        self.emotion = None  # Reset emotion after eating animation
+                        del self.event_start_time  # Remove the attribute to allow for future eating animations
+
+                elif self.emotion == "see":
+                    blink_index = (pg.time.get_ticks() // 50) % len(graphics["snake_see"])
+                    rotated_head_image = self.rotate(graphics["snake_see"][blink_index], self.l_direction)
+                    surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
+
+                elif self.emotion == "blink":
+                    if not hasattr(self, 'event_start_time'):
+                        self.event_start_time = pg.time.get_ticks()
+                    blink_index = (pg.time.get_ticks() - self.event_start_time) // 50 % len(graphics["snake_blink"])
+                    if blink_index != 2:
+                        rotated_head_image = self.rotate(graphics["snake_blink"][blink_index], self.l_direction)
+                        surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
+                    else:
+                        self.emotion = None  # Reset emotion after eating animation
+                        del self.event_start_time  # Remove the attribute to allow for future eating animations
+
+            else:
+                rotated_head_image = self.rotate(graphics["snake_head"], self.l_direction)
+                
+                rect = rotated_head_image.get_rect(center=center_pos)
+                
+                surface.blit(rotated_head_image, rect)
     class Food:
         def __init__(self, snake_body):
             self.ramdomize_position(snake_body)
         def ramdomize_position(self, snake_body):
+            
             while True:
-                self.position = (random.randint(0, GRID_WIDTH - 1), 
-                                 random.randint(0, GRID_HEIGHT - 1))
+                self.position = (randint(0, GRID_WIDTH - 1), 
+                                 randint(0, GRID_HEIGHT - 1))
                 if self.position not in snake_body:
                     break
 
@@ -195,6 +260,9 @@ def main():
     food = Food(snake.body_grid)
 
     frame_count = 0
+
+    BLINK_EVENT = pg.USEREVENT + 1
+    pg.time.set_timer(BLINK_EVENT, randint(1000, 2000))  # Set blink event every
 
     while not game_over:
         for event in pg.event.get():
@@ -210,6 +278,10 @@ def main():
                 elif event.key == pg.K_RIGHT:
                     snake.change_direction((1, 0))
 
+            if event.type == BLINK_EVENT:
+                if not snake.emotion:
+                    snake.emotion = "blink"
+
         frame_count += 1
         if frame_count >= FRAMES_PER_MOVE:
             frame_count = 0
@@ -217,13 +289,27 @@ def main():
                 game_over = True
 
         if snake.body_grid[0] == food.position:
+            SCORE += 1
             snake.grow()
             food.ramdomize_position(snake.body_grid)
+
+        else: # if not eated
+            TRESHOLD = 3
+            close_to_food = False
+            for i in range(-1 * TRESHOLD, TRESHOLD + 1, 1):
+                if food.position[0] + i == snake.body_grid[0][0]:
+                    for j in range(-1 * TRESHOLD, TRESHOLD + 1, 1):
+                        if food.position[1] + j == snake.body_grid[0][1]:
+                            if snake.emotion != "eat": snake.emotion = "see"
+                            close_to_food = True
+                            break
+            if not close_to_food and snake.emotion == "see": snake.emotion = None
         
         screen.fill(BLACK)
 
         screen.blit(graphics["background"], (0, 0))
         draw_grid(screen)
+        screen.blit(text_font.render(f"Score: {SCORE}", True, BLACK), (10, 10))
 
         snake.animate()
         snake.draw(screen)
