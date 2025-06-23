@@ -1,6 +1,0 @@
-Proje Vizyonu:
-Animasyonlu bir yılan oyunu yapmak
-Bunun üzerinden yapay zeka(lar) eğitmek
-Yapılan yapay zeka(lar)ı görselleştirmek
-
-"Büyük bir proje olacak, iyi şanslar!"
