@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
-from random import randint
+from random import randint, choice
+from time import sleep
 import os
 
 # --- Constants ---
@@ -42,6 +43,7 @@ def main():
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pg.display.set_caption("Snake Game")
 
+
     text_font = pg.font.Font(resource_path("graphs/snake_game_font.ttf"), 20)
     graphics = {
         "background": pg.transform.scale(pg.image.load(resource_path("graphs/background.png")).convert(), (SCREEN_WIDTH, SCREEN_HEIGHT)),
@@ -70,12 +72,21 @@ def main():
         pg.transform.scale(pg.image.load(resource_path("graphs/snake_eat3.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
         "finish"],
 
-        "snake_dead": pg.transform.scale(pg.image.load(resource_path("graphs/snake_dead.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
+        "snake_dead": [(pg.image.load(resource_path("graphs/snake_dead.png"))).convert_alpha(),
+        (pg.image.load(resource_path("graphs/snake_dead0.png"))).convert_alpha()]
     }
+
+    pg.mixer.music.load(resource_path("graphs/snake_game_music.wav"))
+
+    pg.mixer.music.play(loops=-1)
+
 
     clock = pg.time.Clock()
     game_over = False
 
+    # Set the window icon using the original icon size (32x32 recommended)
+    icon_surface = pg.image.load(resource_path("graphs/snake_head.png")).convert_alpha()
+    pg.display.set_icon(pg.transform.rotate(icon_surface, 180))  # Rotate the icon 180 degrees
 
     def draw_grid(surface):
         # vertical lines
@@ -121,8 +132,8 @@ def main():
 
             new_head = (head_x + dir_x, head_y + dir_y)
             # Losing conditions
-            #if not (0 <= new_head[0] < GRID_WIDTH and 0 <= new_head[1] < GRID_HEIGHT) or new_head in self.body_grid:
-            #    return False
+            if not (0 <= new_head[0] < GRID_WIDTH and 0 <= new_head[1] < GRID_HEIGHT) or new_head in self.body_grid:
+                return False
 
             # Update all lists in sync, every time
             self.body_grid.insert(0, new_head)
@@ -212,7 +223,7 @@ def main():
                     if not hasattr(self, 'event_start_time'):
                         self.event_start_time = pg.time.get_ticks()
                     eat_index = (pg.time.get_ticks() - self.event_start_time) // 200 % len(graphics["snake_eat"])
-                    if eat_index != 4:
+                    if eat_index != len(graphics["snake_eat"]) - 1:  # Avoid the last "finish" frame
                         rotated_head_image = self.rotate(graphics["snake_eat"][eat_index], self.l_direction)
                         surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
                     else:
@@ -220,15 +231,15 @@ def main():
                         del self.event_start_time  # Remove the attribute to allow for future eating animations
 
                 elif self.emotion == "see":
-                    blink_index = (pg.time.get_ticks() // 50) % len(graphics["snake_see"])
-                    rotated_head_image = self.rotate(graphics["snake_see"][blink_index], self.l_direction)
+                    see_index = (pg.time.get_ticks() // 50) % len(graphics["snake_see"])
+                    rotated_head_image = self.rotate(graphics["snake_see"][see_index], self.l_direction)
                     surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
 
                 elif self.emotion == "blink":
                     if not hasattr(self, 'event_start_time'):
                         self.event_start_time = pg.time.get_ticks()
                     blink_index = (pg.time.get_ticks() - self.event_start_time) // 50 % len(graphics["snake_blink"])
-                    if blink_index != 2:
+                    if blink_index != len(graphics["snake_blink"]) - 1:  # Avoid the last "finish" frame
                         rotated_head_image = self.rotate(graphics["snake_blink"][blink_index], self.l_direction)
                         surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
                     else:
@@ -309,11 +320,27 @@ def main():
 
         screen.blit(graphics["background"], (0, 0))
         draw_grid(screen)
-        screen.blit(text_font.render(f"Score: {SCORE}", True, BLACK), (10, 10))
 
         snake.animate()
         snake.draw(screen)
         food.draw(screen)
+
+        screen.blit(text_font.render(f"Score: {SCORE}", True, (149, 197, 111)), (10, 10))
+
+        pg.display.flip()
+        clock.tick(60)
+
+    dead_start_time = pg.time.get_ticks()
+    dead_screen = screen.copy()
+    animate_speed = randint(400, 600)
+    while pg.time.get_ticks() - dead_start_time < 3000:
+        
+        dead_index = (pg.time.get_ticks() // animate_speed) % len(graphics["snake_dead"])
+
+        screen.blit(dead_screen, (0, 0))
+        screen.blit(pg.transform.scale(
+            graphics["snake_dead"][dead_index], (SCREEN_WIDTH, SCREEN_HEIGHT))
+            , graphics["snake_dead"][dead_index].get_rect(topleft=(0, 0)))
 
         pg.display.flip()
         clock.tick(60)
