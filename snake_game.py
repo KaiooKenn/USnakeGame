@@ -7,14 +7,14 @@ import os
 # --- Constants ---
 SCREEN_WIDTH = 900
 SCREEN_HEIGHT = 900
-GRID_SIZE = 50
+GRID_SIZE = 100
 HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5)*2  # For the head to be larger than the body
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 SCORE = 0
 
 # How many screen frames it takes for the snake to move one square.
-FRAMES_PER_MOVE = 8
+FRAMES_PER_MOVE = 25
 # Colors
 WHITE = (255, 255, 255)
 GREEN = (0, 150, 0)
@@ -74,6 +74,12 @@ def main():
 
         "snake_dead": [(pg.image.load(resource_path("graphs/snake_dead.png"))).convert_alpha(),
         (pg.image.load(resource_path("graphs/snake_dead0.png"))).convert_alpha()]
+    }
+
+    sfx = {
+        "see": pg.mixer.Sound(resource_path("graphs/Erdem_GelLan.wav")),
+        "start": pg.mixer.Sound(resource_path("graphs/Erdem_FightMe.wav")),
+        "dead": pg.mixer.Sound(resource_path("graphs/Erdem_Dead.wav"))
     }
 
     pg.mixer.music.load(resource_path("graphs/snake_game_music.wav"))
@@ -273,8 +279,13 @@ def main():
     frame_count = 0
 
     BLINK_EVENT = pg.USEREVENT + 1
-    pg.time.set_timer(BLINK_EVENT, randint(1000, 2000))  # Set blink event every
+    GEL_LAN_EVENT = pg.USEREVENT + 2
 
+    pg.time.set_timer(BLINK_EVENT, randint(1000, 2000))  # Set blink event every
+    pg.time.set_timer(GEL_LAN_EVENT, randint(1000, 2000))  # Set Gel Lan event every 1-2 seconds
+    sleep(0.5)
+
+    sfx["start"].play()  # Play the start sound effect
     while not game_over:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -292,6 +303,9 @@ def main():
             if event.type == BLINK_EVENT:
                 if not snake.emotion:
                     snake.emotion = "blink"
+
+            if event.type == GEL_LAN_EVENT and snake.emotion == "see":
+                sfx["see"].play()  # Play the see sound effect
 
         frame_count += 1
         if frame_count >= FRAMES_PER_MOVE:
@@ -333,6 +347,7 @@ def main():
     dead_start_time = pg.time.get_ticks()
     dead_screen = screen.copy()
     animate_speed = randint(400, 600)
+    sfx["dead"].play()  # Play the dead sound effect
     while pg.time.get_ticks() - dead_start_time < 3000:
         
         dead_index = (pg.time.get_ticks() // animate_speed) % len(graphics["snake_dead"])
