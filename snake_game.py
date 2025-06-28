@@ -62,37 +62,57 @@ def main():
     # --- Grafiklerin Yüklenmesi ---
     # Tüm oyun içi görseller (grafikler) yüklenir, ölçeklendirilir ve bir sözlükte saklanır.
     # Bu sayede koda erişimleri kolaylaşır.
+    global note_order
+    note_order = 0
+    music_notes = {
+        "A4": pg.mixer.Sound(resource_path("music_notes/A4.wav")),
+        "A5": pg.mixer.Sound(resource_path("music_notes/A5.wav")),
+        "B4": pg.mixer.Sound(resource_path("music_notes/B4.wav")),
+        "B5": pg.mixer.Sound(resource_path("music_notes/B5.wav")),
+        "C5": pg.mixer.Sound(resource_path("music_notes/C5.wav")),
+        "C6": pg.mixer.Sound(resource_path("music_notes/C6.wav")),
+        "C#6": pg.mixer.Sound(resource_path("music_notes/Cb6.wav")),
+        "D5": pg.mixer.Sound(resource_path("music_notes/D5.wav")),
+        "D#5": pg.mixer.Sound(resource_path("music_notes/Db5.wav")),
+        "E5": pg.mixer.Sound(resource_path("music_notes/E5.wav")),
+        "F5": pg.mixer.Sound(resource_path("music_notes/F5.wav")),
+        "F#5": pg.mixer.Sound(resource_path("music_notes/Fb5.wav")),
+        "G5": pg.mixer.Sound(resource_path("music_notes/G5.wav")),
+        "G#4": pg.mixer.Sound(resource_path("music_notes/Gb4.wav")),
+        "G#5": pg.mixer.Sound(resource_path("music_notes/Gb5.wav")),
+        "C1": pg.mixer.Sound(resource_path("music_notes/C1.wav"))
+    }
 
     MELODY = [
-    ('B4', 8), ('A4', 8), ('G#4', 8), ('A4', 8), ('C5', 2),
-    ('D5', 8), ('C5', 8), ('B4', 8), ('C5', 8), ('E5', 2),
-    ('F5', 8), ('E5', 8), ('D#5', 8), ('E5', 8),
-    ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('C6', 2),
-    ('A5', 4), ('C6', 4), ('G5', 16), ('A5', 16), ('B5', 16), ('A5', 4),
-    ('G5', 4), ('A5', 4), ('G5', 16), ('A5', 16), ('B5', 16), ('A5', 4),
-    ('G5', 4), ('A5', 4), ('G5', 16), ('A5', 16), ('B5', 16), ('A5', 4), ('G5', 4), ('F#5', 4), ('E5', 2),
+    'B4', 'A4', 'G#4', 'A4', 'C5',
+    'D5', 'C5', 'B4', 'C5', 'E5',
+    'F5', 'E5', 'D#5', 'E5',
+    'B5', 'A5', 'G#5', 'A5', 'B5', 'A5', 'G#5', 'A5', 'C6',
+    'A5', 'C6', 'G5', 'A5', 'B5', 'A5',
+    'G5', 'A5', 'G5', 'A5', 'B5', 'A5',
+    'G5', 'A5', 'G5', 'A5', 'B5', 'A5', 'G5', 'F#5', 'E5',
 
-    ('E5', 4), ('F5', 4), ('G5', 4), ('G5', 4), ('A5', 8), ('G5', 8), ('F5', 8), ('E5', 8), ('D5', 2),
-    ('E5', 4), ('F5', 4), ('G5', 4), ('G5', 4), ('A5', 8), ('G5', 8), ('F5', 8), ('E5', 8), ('D5', 2),
-    ('C5', 4), ('D5', 4), ('E5', 4), ('E5', 4), ('F5', 8), ('E5', 8), ('D5', 8), ('C5', 8), ('B4', 2),
-    ('C5', 4), ('D5', 4), ('E5', 4), ('E5', 4), ('F5', 8), ('E5', 8), ('D5', 8), ('C5', 8), ('B4', 2),
+    'E5', 'F5', 'G5', 'G5', 'A5', 'G5', 'F5', 'E5', 'D5',
+    'E5', 'F5', 'G5', 'G5', 'A5', 'G5', 'F5', 'E5', 'D5',
+    'C5', 'D5', 'E5', 'E5', 'F5', 'E5', 'D5', 'C5', 'B4',
+    'C5', 'D5', 'E5', 'E5', 'F5', 'E5', 'D5', 'C5', 'B4',
 
-    ('B4', 8), ('A4', 8), ('G#4', 8), ('A4', 8), ('C5', 2),
-    ('D5', 8), ('C5', 8), ('B4', 8), ('C5', 8), ('E5', 2),
-    ('F5', 8), ('E5', 8), ('D#5', 8), ('E5', 8),
-    ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('C6', 2),
+    'B4', 'A4', 'G#4', 'A4', 'C5',
+    'D5', 'C5', 'B4', 'C5', 'E5',
+    'F5', 'E5', 'D#5', 'E5',
+    'B5', 'A5', 'G#5', 'A5', 'B5', 'A5', 'G#5', 'A5', 'C6',
 
-    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
-    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('G#5', 4), ('A5', 4), ('B5', 4), ('G#5', 4), ('E5', 2),
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'G#5', 'A5', 'B5', 'G#5', 'E5',
 
-    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
-    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('B5', 4), ('G#5', 4), ('E5', 2), ('A5', 4),
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'B5', 'G#5', 'E5', 'A5',
 
-    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
-    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('G#5', 4), ('A5', 4), ('B5', 4), ('G#5', 4), ('E5', 2),
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'G#5', 'A5', 'B5', 'G#5', 'E5',
 
-    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
-    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('B5', 4), ('G#5', 4), ('E5', 2), ('A5', 4),
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'B5', 'G#5', 'E5', 'A5'
 ]
 
     graphics = {
@@ -129,16 +149,19 @@ def main():
         "snake_xx": pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
     }
 
+    def play_note(order= note_order, List = "MELODY"):
+        for note in music_notes.values():
+            note.stop()
+        if List == "MELODY":
+            order = order % len(MELODY)
+            music_notes[MELODY[order]].play()
+            # Stop any currently playing note before playing a new one
+        elif List == "DEAD": music_notes["C1"].play()
+        else: print("miss spell")
+
     # --- Ses Efektlerinin Yüklenmesi ---
     # Tüm ses efektleri (SFX) yüklenir ve bir sözlükte saklanır.
     
-    # Arka plan müziğini yükler.
-    pg.mixer.music.load(resource_path("graphs/snake_game_music.wav"))
-    # Arka plan müziğinin ses seviyesini ayarlar.
-    pg.mixer.music.set_volume(0.2)
-    # Arka plan müziğini sonsuz döngüde çalmaya başlar.
-    pg.mixer.music.play(loops=-1)
-
     # Oyunun hızını (FPS) kontrol etmek için bir saat nesnesi oluşturur.
     clock = pg.time.Clock()
     # Oyunun bitip bitmediğini kontrol eden bayrak (flag).
@@ -179,7 +202,10 @@ def main():
             self.body_pixels = [pg.Vector2(pos) * GRID_SIZE for pos in self.body_grid]
 
         # Yılanın hareket yönünü değiştiren metot.
-        def change_direction(self, new_direction):           
+        def change_direction(self, new_direction):
+            global note_order
+            play_note(note_order)
+            note_order += 1
             if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction:
                 self.direction[0] = new_direction
 
@@ -502,6 +528,7 @@ def main():
     dead_screen = screen.copy() # Oyunun son anının ekran görüntüsünü alır.
     animate_speed = randint(400, 600)
 
+    play_note(note_order, "DEAD")
     # 3 saniye boyunca oyun sonu ekranını gösterir.
     while pg.time.get_ticks() - dead_start_time < 3000:
         dead_index = (pg.time.get_ticks() // animate_speed) % len(graphics["snake_dead"])
