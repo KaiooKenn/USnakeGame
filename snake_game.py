@@ -5,14 +5,15 @@ from random import randint
 from time import sleep
 import os
 
+
 # --- Oyun Sabitleri ---
 # Bu değerler oyunun temel özelliklerini belirler ve kod içinde kolayca değiştirilebilir.
 
-SCREEN_WIDTH = 900          # Oyun penceresinin genişliği (piksel).
-SCREEN_HEIGHT = 900         # Oyun penceresinin yüksekliği (piksel).
-GRID_SIZE = 50              # Oyun alanındaki her bir karenin boyutu (piksel).
-GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE # Ekranın kaç adet kareden oluştuğunu hesaplar (genişlik).
-GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE # Ekranın kaç adet kareden oluştuğunu hesaplar (yükseklik).
+SCREEN_WIDTH = 900                           # Oyun penceresinin genişliği (piksel).
+SCREEN_HEIGHT = 900                          # Oyun penceresinin yüksekliği (piksel).
+GRID_SIZE = 50                               # Oyun alanındaki her bir karenin boyutu (piksel).
+GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE       # Ekranın kaç adet kareden oluştuğunu hesaplar (genişlik).
+GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE     # Ekranın kaç adet kareden oluştuğunu hesaplar (yükseklik).
 HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5) * 2 # Yılanın başının gövdesinden daha büyük görünmesi için özel bir boyut hesaplaması.
 
 
@@ -61,16 +62,49 @@ def main():
     # --- Grafiklerin Yüklenmesi ---
     # Tüm oyun içi görseller (grafikler) yüklenir, ölçeklendirilir ve bir sözlükte saklanır.
     # Bu sayede koda erişimleri kolaylaşır.
+
+    MELODY = [
+    ('B4', 8), ('A4', 8), ('G#4', 8), ('A4', 8), ('C5', 2),
+    ('D5', 8), ('C5', 8), ('B4', 8), ('C5', 8), ('E5', 2),
+    ('F5', 8), ('E5', 8), ('D#5', 8), ('E5', 8),
+    ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('C6', 2),
+    ('A5', 4), ('C6', 4), ('G5', 16), ('A5', 16), ('B5', 16), ('A5', 4),
+    ('G5', 4), ('A5', 4), ('G5', 16), ('A5', 16), ('B5', 16), ('A5', 4),
+    ('G5', 4), ('A5', 4), ('G5', 16), ('A5', 16), ('B5', 16), ('A5', 4), ('G5', 4), ('F#5', 4), ('E5', 2),
+
+    ('E5', 4), ('F5', 4), ('G5', 4), ('G5', 4), ('A5', 8), ('G5', 8), ('F5', 8), ('E5', 8), ('D5', 2),
+    ('E5', 4), ('F5', 4), ('G5', 4), ('G5', 4), ('A5', 8), ('G5', 8), ('F5', 8), ('E5', 8), ('D5', 2),
+    ('C5', 4), ('D5', 4), ('E5', 4), ('E5', 4), ('F5', 8), ('E5', 8), ('D5', 8), ('C5', 8), ('B4', 2),
+    ('C5', 4), ('D5', 4), ('E5', 4), ('E5', 4), ('F5', 8), ('E5', 8), ('D5', 8), ('C5', 8), ('B4', 2),
+
+    ('B4', 8), ('A4', 8), ('G#4', 8), ('A4', 8), ('C5', 2),
+    ('D5', 8), ('C5', 8), ('B4', 8), ('C5', 8), ('E5', 2),
+    ('F5', 8), ('E5', 8), ('D#5', 8), ('E5', 8),
+    ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('B5', 8), ('A5', 8), ('G#5', 8), ('A5', 8), ('C6', 2),
+
+    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
+    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('G#5', 4), ('A5', 4), ('B5', 4), ('G#5', 4), ('E5', 2),
+
+    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
+    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('B5', 4), ('G#5', 4), ('E5', 2), ('A5', 4),
+
+    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
+    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('G#5', 4), ('A5', 4), ('B5', 4), ('G#5', 4), ('E5', 2),
+
+    ('A5', 4), ('B5', 4), ('C#6', 2), ('A5', 4), ('B5', 4), ('C#6', 4),
+    ('B5', 4), ('A5', 4), ('G#5', 4), ('F#5', 4), ('B5', 4), ('G#5', 4), ('E5', 2), ('A5', 4),
+]
+
     graphics = {
         "background": pg.transform.scale(pg.image.load(resource_path("graphs/background.png")).convert(), (SCREEN_WIDTH, SCREEN_HEIGHT)),
         "food_image": pg.transform.scale(pg.image.load(resource_path("graphs/food.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
         "snake_head": pg.transform.scale(pg.image.load(resource_path("graphs/snake_head.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
         "under_head": pg.transform.scale(pg.image.load(resource_path("graphs/under_head.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
         "snake_body": pg.transform.scale(pg.image.load(resource_path("graphs/snake_body.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_tl": pg.transform.scale(pg.image.load(resource_path("graphs/corner_tl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_tr": pg.transform.scale(pg.image.load(resource_path("graphs/corner_tr.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_bl": pg.transform.scale(pg.image.load(resource_path("graphs/corner_bl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        "corner_br": pg.transform.scale(pg.image.load(resource_path("graphs/corner_br.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        "body_corner": [pg.transform.scale(pg.image.load(resource_path("graphs/corner_tl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)), # [0] -> top-left
+        pg.transform.scale(pg.image.load(resource_path("graphs/corner_tr.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)), # [1] -> top-right
+        pg.transform.scale(pg.image.load(resource_path("graphs/corner_bl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)), # [2] -> bottom-left
+        pg.transform.scale(pg.image.load(resource_path("graphs/corner_br.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE))], # [3] -> bottom-right
         "snake_tail": pg.transform.scale(pg.image.load(resource_path("graphs/snake_tail.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
         "snake_blink": [pg.transform.scale(pg.image.load(resource_path("graphs/snake_blink0.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
         pg.transform.scale(pg.image.load(resource_path("graphs/snake_blink1.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)), 
@@ -84,22 +118,20 @@ def main():
         pg.transform.scale(pg.image.load(resource_path("graphs/snake_eat3.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
         "finish"],
         "body_eat": [pg.transform.scale(pg.image.load(resource_path("graphs/body_eat0.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-        pg.transform.scale(pg.image.load(resource_path("graphs/body_eat1.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE))],
-        "snake_dead": [(pg.image.load(resource_path("graphs/snake_dead.png"))).convert_alpha(),
-        (pg.image.load(resource_path("graphs/snake_dead0.png"))).convert_alpha()]
+        pg.transform.scale(pg.image.load(resource_path("graphs/body_eat1.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+        pg.transform.scale(pg.image.load(resource_path("graphs/body_eat2.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),],
+        "eat_corner": [pg.transform.scale(pg.image.load(resource_path("graphs/eat_tl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+                       pg.transform.scale(pg.image.load(resource_path("graphs/eat_tr.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+                       pg.transform.scale(pg.image.load(resource_path("graphs/eat_bl.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+                       pg.transform.scale(pg.image.load(resource_path("graphs/eat_br.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE))],
+        "snake_dead": [(pg.image.load(resource_path("graphs/snake_dead0.png"))).convert_alpha(),
+        (pg.image.load(resource_path("graphs/snake_dead1.png"))).convert_alpha()],
+        "snake_xx": pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
     }
 
     # --- Ses Efektlerinin Yüklenmesi ---
     # Tüm ses efektleri (SFX) yüklenir ve bir sözlükte saklanır.
-    sfx = {
-        "see": pg.mixer.Sound(resource_path("graphs/Erdem_GelLan.wav")),
-        "start": pg.mixer.Sound(resource_path("graphs/Erdem_FightMe.wav")),
-        "dead": pg.mixer.Sound(resource_path("graphs/Erdem_Dead.wav"))
-    }
-    # Tüm ses efektlerinin ses seviyesini ayarlar.
-    for sound in sfx.values():
-        sound.set_volume(0.2)
-
+    
     # Arka plan müziğini yükler.
     pg.mixer.music.load(resource_path("graphs/snake_game_music.wav"))
     # Arka plan müziğinin ses seviyesini ayarlar.
@@ -125,8 +157,8 @@ def main():
         for y in range(0, SCREEN_HEIGHT, GRID_SIZE):
             pg.draw.line(surface, GRID_COLOR, (0, y), (SCREEN_WIDTH, y))
 
-    # --- Yılan Sınıfı (Snake Class) ---
-    # Yılanın tüm özelliklerini ve davranışlarını yönetir.
+# --- Yılan Sınıfı (Snake Class) ---
+# Yılanın tüm özelliklerini ve davranışlarını yönetir.
     class Snake:
         # Yılan nesnesi ilk oluşturulduğunda çalışan metot.
         def __init__(self):
@@ -139,14 +171,15 @@ def main():
             self.l_direction = (1, 0)
             # Yılanın yemek yiyip büyümesi gerekip gerekmediğini belirten bayrak.
             self.is_growing = False
+            # Yılanın gövdesindeki "yeme" animasyonunun (şişkinliğin) hangi segmentlerde olduğunu takip eder.
+            self.bulge_indices = []
             # Yılanın mevcut duygusal durumunu saklar (animasyonlar için: "blink", "see", "eat").
             self.emotion = None
             # Yılanın gövde parçalarının piksel koordinatları. Bu, akıcı animasyonlar için kullanılır.
             self.body_pixels = [pg.Vector2(pos) * GRID_SIZE for pos in self.body_grid]
 
         # Yılanın hareket yönünü değiştiren metot.
-        def change_direction(self, new_direction):
-            # Yılanın tam tersi yönde hareket etmesini engeller.
+        def change_direction(self, new_direction):           
             if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction:
                 self.direction[0] = new_direction
 
@@ -181,17 +214,25 @@ def main():
             self.direction.insert(0, self.direction[0])
             self.body_pixels.insert(0, self.body_pixels[0].copy())
 
+            self.bulge_indices = [i + 2 for i in self.bulge_indices]
+            self.bulge_indices = [i for i in self.bulge_indices if i < len(self.body_pixels)]
+
             # Eğer yılanın büyümesi gerekiyorsa (yemek yemişse):
             if self.is_growing:
                 self.emotion = "eat" # Yeme animasyonunu tetikler.
                 # Yeme animasyonunun her seferinde baştan başlaması için zamanlayıcıyı başlatır.
                 self.event_start_time = pg.time.get_ticks()
                 self.is_growing = False # Büyüme bayrağını sıfırlar.
+                # Başın hemen arkasına (indeks 1) yeni bir şişkinlik ekler.
+                self.bulge_indices.append(1)
             else:
                 # Büyümüyorsa, kuyruktan bir segment siler.
                 self.body_grid.pop()
                 self.direction.pop()
                 self.body_pixels.pop()
+
+            # Kuyruğu geçmiş olan şişkinlikleri listeden temizler.
+            self.bulge_indices = [i for i in self.bulge_indices if i < len(self.body_grid)]
 
             return True # Hareket başarılı.
 
@@ -209,6 +250,11 @@ def main():
 
         # Yılanı ekrana çizen metot.
         def draw(self, surface):
+            # Gövdedeki tüm şişkinlikler için ortak bir "atma" animasyon indeksi oluşturur.
+            # Bu, `body_eat` listesindeki görseller arasında geçişi sağlar.
+            body_eat_anim_index = (pg.time.get_ticks() // 200) % len(graphics["body_eat"])
+            if not hasattr(self, "head_direction"): self.head_direction = (1, 0)
+
             # Gövdenin her bir parçasını çizer.
             for i, pixel_pos in enumerate(self.body_pixels):
                 center_pos = (pixel_pos.x + GRID_SIZE / 2, pixel_pos.y + GRID_SIZE / 2)
@@ -218,6 +264,7 @@ def main():
                     rotated_image = self.rotate(graphics["snake_tail"], self.direction[i])
                     rect = rotated_image.get_rect(center=center_pos)
                     surface.blit(rotated_image, rect)
+
                 # GÖVDE (Düz veya Köşe)
                 elif i != 0:
                     current_grid_pos = pg.Vector2(self.body_grid[i])
@@ -229,17 +276,33 @@ def main():
 
                     # DÜZ GİDİYORSA:
                     if vec_from_head == vec_to_tail * -1:
-                        rotated_image = self.rotate(graphics["snake_body"], self.direction[i])
+                        # Mevcut segmentin bir şişkinliğe sahip olup olmadığını kontrol et.
+                        if i in self.bulge_indices:
+                            # Eğer varsa, animasyonlu "yeme" gövde parçasını kullan.
+                            image_to_draw = graphics["body_eat"][body_eat_anim_index]
+                        else:
+                            # Yoksa, normal gövde parçasını kullan.
+                            image_to_draw = graphics["snake_body"]
+                        
+                        rotated_image = self.rotate(image_to_draw, self.direction[i])
                         rect = rotated_image.get_rect(center=center_pos)
                         surface.blit(rotated_image, rect)
                     # KÖŞE DÖNÜYORSA: Doğru köşe resmini seçer.
                     else:
                         turn_vectors = {(int(vec_from_head.x), int(vec_from_head.y)), (int(vec_to_tail.x), int(vec_to_tail.y))}
+                        
+                        # Kullanılacak köşe görselleri setini belirle (normal veya yeme).
+                        if i in self.bulge_indices:
+                            corner_image_set = graphics["eat_corner"]
+                        else:
+                            corner_image_set = graphics["body_corner"]
+                        
                         image_to_draw = None
-                        if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = graphics["corner_tl"]
-                        elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = graphics["corner_tr"]
-                        elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = graphics["corner_bl"]
-                        elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = graphics["corner_br"]
+                        if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = corner_image_set[0] # top-left
+                        elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = corner_image_set[1] # top-right
+                        elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = corner_image_set[2] # bottom-left
+                        elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = corner_image_set[3] # bottom-right
+                        
                         if image_to_draw:
                             rect = image_to_draw.get_rect(center=center_pos)
                             surface.blit(image_to_draw, rect)
@@ -253,35 +316,46 @@ def main():
             under_rect = rotated_under_head_image.get_rect(center=center_pos)
             surface.blit(rotated_under_head_image, under_rect)
 
+            if not hasattr(self, "head_cooldown"): self.head_cooldown = pg.time.get_ticks()
             # Eğer bir animasyon aktifse, onu çizer.
             if self.emotion:
                 if self.emotion == "eat":
                     eat_index = (pg.time.get_ticks() - self.event_start_time) // 200 % len(graphics["snake_eat"])
                     if eat_index != len(graphics["snake_eat"]) - 1:
-                        rotated_head_image = self.rotate(graphics["snake_eat"][eat_index], self.l_direction)
-                        surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
+                        head_surface = graphics["snake_eat"][eat_index]
+    
                     else:
+                        head_surface = graphics["snake_head"]
                         self.emotion = None # Animasyon bitince durumu sıfırlar.
                         del self.event_start_time
 
                 elif self.emotion == "see":
                     see_index = (pg.time.get_ticks() // 50) % len(graphics["snake_see"])
-                    rotated_head_image = self.rotate(graphics["snake_see"][see_index], self.l_direction)
-                    surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
+                    head_surface = graphics["snake_see"][see_index]
+
                     
                 elif self.emotion == "blink":
                     blink_index = (pg.time.get_ticks() - self.event_start_time) // 50 % len(graphics["snake_blink"])
                     if blink_index != len(graphics["snake_blink"]) - 1:
-                        rotated_head_image = self.rotate(graphics["snake_blink"][blink_index], self.l_direction)
-                        surface.blit(rotated_head_image, rotated_head_image.get_rect(center=center_pos))
+                        head_surface = graphics["snake_blink"][blink_index]
+    
                     else:
+                        head_surface = graphics["snake_head"]
                         self.emotion = None # Animasyon bitince durumu sıfırlar.
                         del self.event_start_time
+                elif self.emotion == "dead":
+                    head_surface = graphics["snake_xx"]
+
             # Eğer animasyon yoksa, normal kafa resmini çizer.
             else:
-                rotated_head_image = self.rotate(graphics["snake_head"], self.l_direction)
-                rect = rotated_head_image.get_rect(center=center_pos)
-                surface.blit(rotated_head_image, rect)
+                head_surface = graphics["snake_head"]
+
+            if pg.time.get_ticks() - self.head_cooldown > 100:
+                self.head_direction = self.l_direction
+                del self.head_cooldown 
+            
+            surface.blit(self.rotate(head_surface, self.head_direction), head_surface.get_rect(center=center_pos))
+
 
     # --- Yem Sınıfı (Food Class) ---
     # Yemin özelliklerini ve davranışlarını yönetir.
@@ -313,22 +387,18 @@ def main():
     MAX_MOVE_QUEUE = 2 # Kuyrukta en fazla 2 hamle saklanabilir.
 
     # Yılan hareketini zamanlamak için kullanılan çerçeve sayacı.
-    frame_count = 0
+    snake_move_counter = 0
 
     # --- Özel Pygame Olayları (Event) ---
     # Belirli aralıklarla özel olaylar tetiklemek için kullanılır.
     BLINK_EVENT = pg.USEREVENT + 1   # Göz kırpma olayı
-    GEL_LAN_EVENT = pg.USEREVENT + 2 # Ses efekti olayı
 
     # Rastgele 1-2 saniyede bir BLINK_EVENT'i tetiklemesi için zamanlayıcı kurulur.
     pg.time.set_timer(BLINK_EVENT, randint(1000, 2000))
-    # Rastgele 1-2 saniyede bir GEL_LAN_EVENT'i tetiklemesi için zamanlayıcı kurulur.
-    pg.time.set_timer(GEL_LAN_EVENT, randint(1000, 2000))
 
     # Oyun başlangıcında kısa bir bekleme.
     sleep(0.05)
     # Başlangıç ses efektini çalar.
-    sfx["start"].play()
 
     # --- Ana Oyun Döngüsü ---
     # `game_over` True olana kadar sürekli çalışır.
@@ -362,14 +432,12 @@ def main():
                     snake.event_start_time = pg.time.get_ticks() # Animasyon zamanlayıcısını başlat
 
             # Ses efekti zamanlayıcısı tetiklendiğinde ve yılan "see" modundaysa:
-            if event.type == GEL_LAN_EVENT and snake.emotion == "see":
-                sfx["see"].play()
 
         # --- Oyun Mantığı ---
-        frame_count += 1
+        snake_move_counter += 1
         # Yılanın hareket etme zamanı geldiyse (belirlenen çerçeve sayısına ulaşıldıysa):
-        if frame_count >= FRAMES_PER_MOVE:
-            frame_count = 0 # Sayacı sıfırla.
+        if snake_move_counter >= FRAMES_PER_MOVE:
+            snake_move_counter = 0 # Sayacı sıfırla.
 
             # Eğer hareket kuyruğunda bekleyen bir hamle varsa, onu kullan.
             if move_queue:
@@ -380,17 +448,22 @@ def main():
             if not snake.front_fonction():
                 # Çarpma anında hemen değil, kısa bir gecikmeyle oyunu bitirir.
                 if not hasattr(snake, 'dead_counter'):
+                    snake.emotion = "dead"
                     snake.dead_counter = pg.time.get_ticks()
                 if pg.time.get_ticks() - snake.dead_counter >= 100:
                     game_over = True
             elif hasattr(snake, 'dead_counter'): 
                 del snake.dead_counter # Eğer çarpma durumu düzelirse sayacı sil.
 
+            elif snake.emotion == "dead":
+                snake.emotion = None
+
         # Yılanın başı yemin pozisyonuna ulaştıysa (yemi yediyse):
         if snake.body_grid[0] == food.position:
             SCORE += 1 # Skoru artır.
             snake.grow() # Yılanın büyümesini tetikle.
             food.ramdomize_position(snake.body_grid) # Yemi yeni bir yere koy.
+
         else:
             # Yemi yememişse, yemin yakında olup olmadığını kontrol et.
             TRESHOLD = 3 # Yakınlık eşiği (kare cinsinden).
@@ -400,7 +473,7 @@ def main():
                 if food.position[0] + i == snake.body_grid[0][0]:
                     for j in range(-1 * TRESHOLD, TRESHOLD + 1, 1):
                         if food.position[1] + j == snake.body_grid[0][1]:
-                            if snake.emotion != "eat": snake.emotion = "see" # "see" animasyonunu tetikle.
+                            if snake.emotion != "eat" and snake.emotion != "dead": snake.emotion = "see" # "see" animasyonunu tetikle.
                             close_to_food = True
                             break
             # Eğer yem artık yakın değilse ve yılan "see" modundaysa, durumu sıfırla.
@@ -428,7 +501,6 @@ def main():
     dead_start_time = pg.time.get_ticks()
     dead_screen = screen.copy() # Oyunun son anının ekran görüntüsünü alır.
     animate_speed = randint(400, 600)
-    sfx["dead"].play() # Ölüm ses efektini çalar.
 
     # 3 saniye boyunca oyun sonu ekranını gösterir.
     while pg.time.get_ticks() - dead_start_time < 3000:
@@ -442,8 +514,8 @@ def main():
 
     # Pygame modüllerini durdurur.
     pg.quit()
-    # Programdan tamamen çıkar.
     sys.exit()
+    # Programdan tamamen çıkar.
 
 # Bu standart Python kontrolü, script'in doğrudan çalıştırıldığında `main()` fonksiyonunu çağırmasını sağlar.
 # Eğer bu script başka bir script tarafından import edilirse, `main()` otomatik olarak çalışmaz.
