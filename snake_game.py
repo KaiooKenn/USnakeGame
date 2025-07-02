@@ -6,34 +6,36 @@ from time import sleep
 import os
 
 
-# --- Oyun Sabitleri ---
-# Bu değerler oyunun temel özelliklerini belirler ve kod içinde kolayca değiştirilebilir.
-
-SCREEN_WIDTH = 900                           # Oyun penceresinin genişliği (piksel).
-SCREEN_HEIGHT = 900                          # Oyun penceresinin yüksekliği (piksel).
-GRID_SIZE = 50                               # Oyun alanındaki her bir karenin boyutu (piksel).
-GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE       # Ekranın kaç adet kareden oluştuğunu hesaplar (genişlik).
-GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE     # Ekranın kaç adet kareden oluştuğunu hesaplar (yükseklik).
-HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5) * 2 # Yılanın başının gövdesinden daha büyük görünmesi için özel bir boyut hesaplaması.
-
-
-# Yılanın bir kare hareket etmesi için geçmesi gereken ekran çerçevesi (frame) sayısı.
-# Bu değer ne kadar yüksek olursa, yılan o kadar yavaş hareket eder.
-FRAMES_PER_MOVE = 7
-
-# --- Renk Tanımlamaları ---
-# Renkler, RGB (Kırmızı, Yeşil, Mavi) formatında tanımlanır.
-WHITE = (255, 255, 255)
-GREEN = (0, 150, 0)
-DARK_GREEN = (0, 100, 0)
-RED = (200, 0, 0)
-BLACK = (0, 0, 0)
-GRID_COLOR = (169, 217, 131) # Izgara çizgilerinin rengi.
 
 
 # --- Ana Fonksiyon ---
 # Oyunun tüm mantığının ve döngüsünün bulunduğu ana fonksiyon.
 def main():
+    pg.init()
+
+    Info_Object = pg.display.Info()
+    # --- Oyun Sabitleri ---
+    # Bu değerler oyunun temel özelliklerini belirler ve kod içinde kolayca değiştirilebilir.
+    SCREEN_WIDTH = SCREEN_HEIGHT = (Info_Object.current_h)*4 //5                       # Oyun penceresinin genişliği (piksel)                          # Oyun penceresinin yüksekliği (piksel).
+    GRID_SIZE = 50                               # Oyun alanındaki her bir karenin boyutu (piksel).
+    GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE       # Ekranın kaç adet kareden oluştuğunu hesaplar (genişlik).
+    GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE     # Ekranın kaç adet kareden oluştuğunu hesaplar (yükseklik).
+    HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5) * 2 # Yılanın başının gövdesinden daha büyük görünmesi için özel bir boyut hesaplaması.
+    print(f"SCREEN SIZE: {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
+
+
+    # Yılanın bir kare hareket etmesi için geçmesi gereken ekran çerçevesi (frame) sayısı.
+    # Bu değer ne kadar yüksek olursa, yılan o kadar yavaş hareket eder.
+    FRAMES_PER_MOVE = 7
+
+    # --- Renk Tanımlamaları ---
+    # Renkler, RGB (Kırmızı, Yeşil, Mavi) formatında tanımlanır.
+    WHITE = (255, 255, 255)
+    GREEN = (0, 150, 0)
+    DARK_GREEN = (0, 100, 0)
+    RED = (200, 0, 0)
+    BLACK = (0, 0, 0)
+    GRID_COLOR = (169, 217, 131) # Izgara çizgilerinin rengi.
     SCORE = 0                   # Oyuncunun başlangıç skoru.
 
     # Bu yardımcı fonksiyon, oyunun dosyalarının (resimler, sesler) yolunu doğru bir şekilde bulmasını sağlar.
@@ -49,7 +51,6 @@ def main():
         return os.path.join(base_path, relative_path)
 
     # Pygame kütüphanesini başlatır.
-    pg.init()
 
     # Oyun penceresini belirtilen genişlik ve yükseklikte oluşturur.
     screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
