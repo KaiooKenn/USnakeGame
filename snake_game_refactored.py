@@ -13,14 +13,18 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-# --Snake Class--
-class Snake:
+# --SNAKE Class--
+class SNAKE:
     
     def __init__(self):
         super().__init__()
+        # Positions and direction attributes
         self.direction = [(1, 0), (1, 0)]
         self.body_grid = [((SCREEN_SIZE//GRID_SIZE) // 2 - 1, (SCREEN_SIZE//GRID_SIZE) // 2), ((SCREEN_SIZE//GRID_SIZE) // 2 - 2, (SCREEN_SIZE//GRID_SIZE) // 2)]
         self.body_pixels = [pg.Vector2(pos) * GRID_SIZE for pos in self.body_grid]
+        
+        # Case attributes
+        self._is_growing = False
         
     @staticmethod    
     def rotate(image, direction):
@@ -48,16 +52,13 @@ class Snake:
         self.direction.insert(0, self.direction[0])  # Copy the current direction to the new head
         self.body_pixels.insert(0, self.body_pixels[0].copy()) # Copy the pixel position of the head
         
-        # if snake eats food
-        #if self._is_growing:
-        #    self._is_growing = False
-        #else:
-        #    self.body_grid.pop()  # Remove the tail if not growing
-        #    self.direction.pop()  # Remove the tail direction
-        self.body_grid.pop()  # Remove the tail
-        self.direction.pop()
-        self.body_pixels.pop()
-        print(self.direction)
+        #if snake eats food
+        if self._is_growing:
+            self._is_growing = False
+        else:
+            self.body_grid.pop()  # Remove the tail if not growing
+            self.direction.pop()  # Remove the tail direction
+            self.body_pixels.pop() # Remove the tail pixel position
         return True # if not game over
     
     # Animation for the snake
@@ -67,7 +68,7 @@ class Snake:
             self.body_pixels[i] = self.body_pixels[i].lerp(target_pixel_pos, 0.25)      
         
     def draw(self, screen, graphics):
-        # -- Draw Snake -- !!! Head must be drawn last !!!
+        # -- Draw SNAKE -- !!! Head must be drawn last !!!
         for i, pos in enumerate(self.body_pixels):
             center_pos = pos + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
             # Draw tail
@@ -86,10 +87,26 @@ class Snake:
                 
     def change_direction(self, new_direction):
         # Prevent the snake from going in the opposite direction
-        if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction[0]:
+        if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction:
             self.direction[0] = new_direction
             
-
+class FOOD:
+    def __init__(self):
+        self.position = (0, 0)
+        self.generate_food()
+        
+    def generate_food(self):
+        # Generate a random position for the food
+        from random import randint
+        self.position = (randint(0, GRID_COUNT - 1), randint(0, GRID_COUNT - 1))
+        
+    def _is_food_eaten(self, pos):
+        # Check if the snake's head position matches the food position
+        return pos == self.position
+        
+    def draw(self, screen, graphics):
+        center_pos = pg.Vector2(self.position) * GRID_SIZE + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
+        screen.blit(graphics["food"], graphics["food"].get_rect(center=center_pos))
             
 # --Game Class--
 class Game:
@@ -172,7 +189,7 @@ class Game:
         except Exception as e:
             print(f"Error loading sounds: {e}")
             sys.exit(1)
-        
+            
         
     def draw_objects(self, *args):
         SCREEN.blit(self.graphics["background"], (0, 0))
@@ -194,11 +211,22 @@ class Game:
     def front_update(self, snake):
         if not snake.front_func():
             self.game_over = True
-            self.running = False     
+            self.running = False
+            
+    @staticmethod
+    def snake_eat(snake, food):
+        # Check if the snake's head has eaten the food
+        if food._is_food_eaten(snake.body_grid[0]):
+            food.generate_food()
+            snake._is_growing = True
+            global SCORE
+            SCORE += 1
+            print(f"Score: {SCORE}")
                 
     def run(self):
         self.start()
-        snake = Snake()
+        snake = SNAKE()
+        food = FOOD()
         
         frame_counter = 0
         while self.running:
@@ -207,9 +235,11 @@ class Game:
             
             if move_time:
                 self.front_update(snake)
+                # Check if the snake's head has eaten the food
+                self.snake_eat(snake, food)
                     
             snake.animate()        
-            self.draw_objects(snake)
+            self.draw_objects(snake, food)
             pg.display.flip()
             
             CLOCK.tick(FPS)
