@@ -20,6 +20,7 @@ class SNAKE:
         super().__init__()
         # Positions and direction attributes
         self.direction = [(1, 0), (1, 0)]
+        self.move_queue = []
         self.body_grid = [((SCREEN_SIZE//GRID_SIZE) // 2 - 1, (SCREEN_SIZE//GRID_SIZE) // 2), ((SCREEN_SIZE//GRID_SIZE) // 2 - 2, (SCREEN_SIZE//GRID_SIZE) // 2)]
         self.body_pixels = [pg.Vector2(pos) * GRID_SIZE for pos in self.body_grid]
         
@@ -35,6 +36,9 @@ class SNAKE:
         
     def front_func(self):
         # Must variables to determine next position of the snake
+        print(self.move_queue)
+        if self.move_queue:
+            self.direction[0] = self.move_queue.pop(0)
         self.l_direction = self.direction[0]
         head_x, head_y = self.body_grid[0]
         dir_x, dir_y = self.direction[0]
@@ -110,9 +114,17 @@ class SNAKE:
                     screen.blit(image_to_draw, rect)
                 
     def change_direction(self, new_direction):
+        if self.move_queue:
+            last_direction = self.move_queue[-1]
+        else:
+            last_direction = self.l_direction
+        
         # Prevent the snake from going in the opposite direction
-        if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction:
-            self.direction[0] = new_direction
+        if (new_direction[0] * -1, new_direction[1] * -1) == last_direction or new_direction == last_direction:
+            return
+        
+        if len(self.move_queue) < 2:
+            self.move_queue.append(new_direction)
             
 class FOOD:    
     def generate_food(self, body_grid):
@@ -153,7 +165,7 @@ class Game:
         SCREEN = pg.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
         CLOCK = pg.time.Clock()
         FPS = 60
-        FRANES_PER_MOVE = 7
+        FRANES_PER_MOVE = 6
         SCORE = 0
         
         self.running = True
