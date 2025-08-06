@@ -277,6 +277,7 @@ def main():
 
         # Yılanı ekrana çizen metot.
         def draw(self, surface):
+            print(self.direction)
             # Gövdedeki tüm şişkinlikler için ortak bir "atma" animasyon indeksi oluşturur.
             # Bu, `body_eat` listesindeki görseller arasında geçişi sağlar.
             body_eat_anim_index = (pg.time.get_ticks() // 200) % len(graphics["body_eat"])
