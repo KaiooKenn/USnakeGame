@@ -69,36 +69,61 @@ class SNAKE:
         
     def draw(self, screen, graphics):
         # -- Draw SNAKE -- !!! Head must be drawn last !!!
-        for i, pos in enumerate(self.body_pixels):
-            center_pos = pos + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
-            # Draw tail
-            if i == len(self.body_pixels) - 1:
-                screen.blit(self.rotate(graphics["snake_tail"], self.direction[i]), graphics["snake_tail"].get_rect(center=center_pos))
-            
-            # Draw body    
-            elif i != 0:
-                # Draw all body parts as body for now TODO: make a func to draw body parts because it is so complicated
-                screen.blit(self.rotate(graphics["snake_body"], self.direction[i]), graphics["snake_body"].get_rect(center=center_pos))
+        center_pos = self.body_pixels[-1] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
+        # Draw tail
+        screen.blit(self.rotate(graphics["snake_tail"], self.direction[-1]), graphics["snake_tail"].get_rect(center=center_pos))
+        
+        # Draw body     
+        self.draw_body(screen, graphics) # Draw body except head
 
         # Draw head
         center_pos = self.body_pixels[0] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)           
         screen.blit(self.rotate(graphics["under_head"], self.l_direction), graphics["under_head"].get_rect(center=center_pos)) # Draw under head
         screen.blit(self.rotate(graphics["snake_head"], self.l_direction), graphics["snake_head"].get_rect(center=center_pos)) # Draw head head
+        
+    def draw_body(self, screen, graphics):
+        # Draw body segments except head and tail
+        for i in range(1, len(self.body_pixels) - 1):
+            pixel_pos = self.body_pixels[i]
+            center_pos = pixel_pos + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
+
+            current_grid_pos = pg.Vector2(self.body_grid[i])
+            head_side_grid_pos = pg.Vector2(self.body_grid[i-1])
+            tail_side_grid_pos = pg.Vector2(self.body_grid[i+1])
+
+            vec_from_head = head_side_grid_pos - current_grid_pos
+            vec_from_tail = tail_side_grid_pos - current_grid_pos
+
+            if vec_from_head == vec_from_tail * -1:
+                screen.blit(self.rotate(graphics["snake_body"], self.direction[i]), graphics["snake_body"].get_rect(center=center_pos))
+            else:
+                turn_vectors = {(int(vec_from_head.x), int(vec_from_head.y)), 
+                                (int(vec_from_tail.x), int(vec_from_tail.y))}
+                image_to_draw = None
+                if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = graphics["body_corner"][0]  # Top Left
+                elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = graphics["body_corner"][1]  # Top Right
+                elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = graphics["body_corner"][2]  # Bottom Left
+                elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = graphics["body_corner"][3]  # Bottom Right
+
+                if image_to_draw:
+                    rect = image_to_draw.get_rect(center=center_pos)
+                    screen.blit(image_to_draw, rect)
                 
     def change_direction(self, new_direction):
         # Prevent the snake from going in the opposite direction
         if (new_direction[0] * -1, new_direction[1] * -1) != self.l_direction:
             self.direction[0] = new_direction
             
-class FOOD:
-    def __init__(self):
-        self.position = (0, 0)
-        self.generate_food()
-        
-    def generate_food(self):
+class FOOD:    
+    def generate_food(self, body_grid):
         # Generate a random position for the food
         from random import randint
-        self.position = (randint(0, GRID_COUNT - 1), randint(0, GRID_COUNT - 1))
+        while True:
+            # Generate a random position within the grid
+            self.position = (randint(0, GRID_COUNT - 1), randint(0, GRID_COUNT - 1))
+            # Ensure the food does not spawn on the snake's body
+            if self.position not in body_grid:
+                break
         
     def _is_food_eaten(self, pos):
         # Check if the snake's head position matches the food position
@@ -119,7 +144,7 @@ class Game:
         # In Game Constants
         global SCREEN_SIZE, GRID_COUNT, GRID_SIZE, HEAD_SIZE
         SCREEN_SIZE = (Info_Object.current_h)*4//5 if Info_Object.current_h < Info_Object.current_w else (Info_Object.current_h)*4//5
-        GRID_COUNT = 25
+        GRID_COUNT = 20
         GRID_SIZE = SCREEN_SIZE // GRID_COUNT
         HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5) * 2
         
@@ -217,7 +242,7 @@ class Game:
     def snake_eat(snake, food):
         # Check if the snake's head has eaten the food
         if food._is_food_eaten(snake.body_grid[0]):
-            food.generate_food()
+            food.generate_food(snake.body_grid)  # Generate new food position
             snake._is_growing = True
             global SCORE
             SCORE += 1
@@ -227,6 +252,7 @@ class Game:
         self.start()
         snake = SNAKE()
         food = FOOD()
+        food.generate_food(snake.body_grid)
         
         frame_counter = 0
         while self.running:
