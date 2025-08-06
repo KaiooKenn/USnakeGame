@@ -21,7 +21,7 @@ class SNAKE:
         # Positions and direction attributes
         self.direction = [(1, 0), (1, 0)]
         self.move_queue = []
-        self.body_grid = [((SCREEN_SIZE//GRID_SIZE) // 2 - 1, (SCREEN_SIZE//GRID_SIZE) // 2), ((SCREEN_SIZE//GRID_SIZE) // 2 - 2, (SCREEN_SIZE//GRID_SIZE) // 2)]
+        self.body_grid = [((GRID_COUNT) // 2 - 1, (GRID_COUNT) // 2), ((GRID_COUNT) // 2 - 2, (GRID_COUNT) // 2)]
         self.body_pixels = [pg.Vector2(pos) * GRID_SIZE for pos in self.body_grid]
         
         # Case attributes
@@ -36,7 +36,6 @@ class SNAKE:
         
     def front_func(self):
         # Must variables to determine next position of the snake
-        print(self.move_queue)
         if self.move_queue:
             self.direction[0] = self.move_queue.pop(0)
         self.l_direction = self.direction[0]
@@ -46,8 +45,8 @@ class SNAKE:
         new_head = (head_x + dir_x, head_y + dir_y) # New head position out of grids
         
         # Game over conditions
-        if (not (0 <= new_head[0] < SCREEN_SIZE // GRID_SIZE and
-                0 <= new_head[1] < SCREEN_SIZE // GRID_SIZE) or
+        if (not (0 <= new_head[0] < GRID_COUNT and
+                0 <= new_head[1] < GRID_COUNT) or
                 (new_head in self.body_grid)):
             return False
         
@@ -58,12 +57,15 @@ class SNAKE:
         
         #if snake eats food
         if self._is_growing:
+            self.animation = "snake_eat"
             self._is_growing = False
         else:
             self.body_grid.pop()  # Remove the tail if not growing
             self.direction.pop()  # Remove the tail direction
             self.body_pixels.pop() # Remove the tail pixel position
         return True # if not game over
+    
+        
     
     # Animation for the snake
     def animate(self):
@@ -126,6 +128,38 @@ class SNAKE:
         if len(self.move_queue) < 2:
             self.move_queue.append(new_direction)
             
+class ANIMATION_HANDLER:
+    def __init__(self):
+        self.animation_frames = []
+        self.current_frame = 0
+        self.frame_counter = 0
+        self.animation_speed = 10 # Speed of the animation, can be adjusted
+    
+    def add_animation(self, frames):
+        self.animation_frames = frames
+        self.current_frame = 0
+        self.frame_counter = 0
+        
+    def update(self):
+        if not self.animation_frames:
+            return
+        
+        # Update the frame counter
+        self.frame_counter += 1
+        
+        # Change frame based on the frame counter
+        if self.frame_counter >= self.animation_speed:
+            self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
+            if self.animation_frames[self.current_frame] == "finish":
+                self.animation_frames = []
+            self.frame_counter = 0
+        
+    def get_image(self):
+        if self.animation_frames:
+            image = self.animation_frames[self.current_frame]
+            if isinstance(image, pg.Surface):
+                return image
+        return None
 class FOOD:    
     def generate_food(self, body_grid):
         # Generate a random position for the food
@@ -156,22 +190,31 @@ class Game:
         # In Game Constants
         global SCREEN_SIZE, GRID_COUNT, GRID_SIZE, HEAD_SIZE
         SCREEN_SIZE = (Info_Object.current_h)*4//5 if Info_Object.current_h < Info_Object.current_w else (Info_Object.current_h)*4//5
-        GRID_COUNT = 20
+        GRID_COUNT = 12
         GRID_SIZE = SCREEN_SIZE // GRID_COUNT
         HEAD_SIZE = GRID_SIZE + (GRID_SIZE // 5) * 2
         
         # In Game Dependencies
-        global SCREEN, CLOCK, FPS, FRANES_PER_MOVE, SCORE
+        global SCREEN, CLOCK, FPS, FRAMES_PER_MOVE, SCORE
         SCREEN = pg.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
         CLOCK = pg.time.Clock()
         FPS = 60
-        FRANES_PER_MOVE = 6
+        FRAMES_PER_MOVE = 7
         SCORE = 0
         
         self.running = True
         self.game_over = False
         
         self.graphics = self.load_images()
+        
+        self.manipulated_images = {
+            "snake_head": self.graphics["snake_head"],
+            "snake_tail": self.graphics["snake_tail"],
+            "snake_body": self.graphics["snake_body"],
+            "under_head": self.graphics["under_head"],
+            "body_corner": self.graphics["body_corner"],
+            "food": self.graphics["food"]
+        }
         
         print("Game has started!")
         
@@ -188,13 +231,13 @@ class Game:
                 "snake_body": pg.transform.scale(pg.image.load(resource_path("graphs/snake_body.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
                 "body_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/corner_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
                 "snake_tail": pg.transform.scale(pg.image.load(resource_path("graphs/snake_tail.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
-                "snake_blink": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_blink{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(2)] + ["finish"],
-                "snake_see": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_see{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(3)],
-                "snake_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_eat{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(4)] + ["finish"],
+                "snake_blink": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_blink{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(2)] + ["finish"],
+                "snake_see": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_see{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(3)],
+                "snake_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_eat{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(4)] + ["finish"],
                 "body_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/body_eat{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(3)],
                 "eat_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/eat_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
                 "snake_dead": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_dead{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(2)],
-                "snake_xx": pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE))
+                "snake_xx": pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
             }
         except Exception as e:
             print(f"Error loading images: {e}")
@@ -231,7 +274,7 @@ class Game:
     def draw_objects(self, *args):
         SCREEN.blit(self.graphics["background"], (0, 0))
         for obj in args:
-            obj.draw(SCREEN, self.graphics)
+            obj.draw(SCREEN, self.manipulated_images)
             
     def handle_events(self, move_time: bool, snake):
         for event in pg.event.get():
@@ -245,10 +288,14 @@ class Game:
                 elif event.key == pg.K_RIGHT: snake.change_direction((1, 0))
                 
     # Check for the positions            
-    def front_update(self, snake):
+    def front_update(self, snake, animation_handler):
         if not snake.front_func():
             self.game_over = True
             self.running = False
+        if hasattr(snake, 'animation'):
+            animation_handler.add_animation(self.graphics[snake.animation])
+            del snake.animation  # Remove the animation attribute after using it
+
             
     @staticmethod
     def snake_eat(snake, food):
@@ -259,22 +306,33 @@ class Game:
             global SCORE
             SCORE += 1
             print(f"Score: {SCORE}")
+            
+    def handle_animations(self, animation_handler):
+        if animation_handler.get_image():
+            # If there is an animation frame, draw it
+            self.manipulated_images["snake_head"] = animation_handler.get_image()
+        else:
+            # If no animation frame, use the snake's head image
+            self.manipulated_images["snake_head"] = self.graphics["snake_head"]
                 
     def run(self):
         self.start()
         snake = SNAKE()
         food = FOOD()
+        animation_handler = ANIMATION_HANDLER()
         food.generate_food(snake.body_grid)
         
         frame_counter = 0
         while self.running:
-            move_time = frame_counter % FRANES_PER_MOVE == 0
+            move_time = frame_counter % FRAMES_PER_MOVE == 0
             self.handle_events(move_time, snake)
             
             if move_time:
-                self.front_update(snake)
+                self.front_update(snake, animation_handler)
                 # Check if the snake's head has eaten the food
                 self.snake_eat(snake, food)
+            animation_handler.update()
+            self.handle_animations(animation_handler)
                     
             snake.animate()        
             self.draw_objects(snake, food)
