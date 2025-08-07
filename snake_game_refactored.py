@@ -26,6 +26,7 @@ class SNAKE:
         
         # Case attributes
         self._is_growing = False
+        self.wanted_animations = []
         
     @staticmethod    
     def rotate(image, direction):
@@ -57,7 +58,7 @@ class SNAKE:
         
         #if snake eats food
         if self._is_growing:
-            self.animation = "snake_eat"
+            self.wanted_animations.append("snake_eat")  # Add the eat animation
             self._is_growing = False
         else:
             self.body_grid.pop()  # Remove the tail if not growing
@@ -114,7 +115,33 @@ class SNAKE:
                 if image_to_draw:
                     rect = image_to_draw.get_rect(center=center_pos)
                     screen.blit(image_to_draw, rect)
+                    
+    def make_animation(self, active_animation):
+        if not self.wanted_animations:
+            return
+        print(f"Current wanted animations: {self.wanted_animations} and active animation: {active_animation}")
+        animation_tiers = ["snake_dead", "snake_eat", "snake_see", "snake_blink"]
+        loop_animations = ["snake_see"]
+        
+        if not active_animation in animation_tiers and active_animation:
+            return
+        if not active_animation:
+            active_animation = self.wanted_animations[0]
+            self.animation = active_animation
+        for animation_name in self.wanted_animations:
+            if animation_name not in animation_tiers:
+                continue
+            if not animation_name in loop_animations:
+                if animation_tiers.index(active_animation) <= animation_tiers.index(animation_name):
+                    applyable = True
+            else:
+                if animation_tiers.index(active_animation) < animation_tiers.index(animation_name):
+                    applyable = True
+            if applyable:
+                active_animation = self.animation = animation_name
                 
+        self.wanted_animations = []  # Clear the wanted animations after processing
+            
     def change_direction(self, new_direction):
         if self.move_queue:
             last_direction = self.move_queue[-1]
@@ -128,19 +155,24 @@ class SNAKE:
         if len(self.move_queue) < 2:
             self.move_queue.append(new_direction)
             
-class ANIMATION_HANDLER:
+class HEAD_ANIMATION_HANDLER:
     def __init__(self):
         self.animation_frames = []
         self.current_frame = 0
         self.frame_counter = 0
         self.animation_speed = 10 # Speed of the animation, can be adjusted
+        self.active_animation = None
     
-    def add_animation(self, frames):
-        self.animation_frames = frames
+    def add_animation(self, frames, name):
+        self.animation_frames = frames 
+        self.active_animation = name
         self.current_frame = 0
         self.frame_counter = 0
+        print(f"Animation added: {self.active_animation}")
+
         
     def update(self):
+        #print(f"Updating animation: {self.get_active_animation()}")
         if not self.animation_frames:
             return
         
@@ -152,6 +184,7 @@ class ANIMATION_HANDLER:
             self.current_frame = (self.current_frame + 1) % len(self.animation_frames)
             if self.animation_frames[self.current_frame] == "finish":
                 self.animation_frames = []
+                self.active_animation = None
             self.frame_counter = 0
         
     def get_image(self):
@@ -236,7 +269,7 @@ class Game:
                 "snake_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_eat{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(4)] + ["finish"],
                 "body_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/body_eat{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(3)],
                 "eat_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/eat_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
-                "snake_dead": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_dead{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(2)],
+                "snake_dead": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_dead{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(2)] + ["finish"],
                 "snake_xx": pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
             }
         except Exception as e:
@@ -276,7 +309,7 @@ class Game:
         for obj in args:
             obj.draw(SCREEN, self.manipulated_images)
             
-    def handle_events(self, move_time: bool, snake):
+    def handle_events(self, snake):
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.running = False
@@ -292,8 +325,9 @@ class Game:
         if not snake.front_func():
             self.game_over = True
             self.running = False
+        snake.make_animation(animation_handler.active_animation)  # Make animation based on the current state
         if hasattr(snake, 'animation'):
-            animation_handler.add_animation(self.graphics[snake.animation])
+            animation_handler.add_animation(self.graphics[snake.animation], str(snake.animation))  # Add the animation frames to the handler
             del snake.animation  # Remove the animation attribute after using it
 
             
@@ -319,13 +353,13 @@ class Game:
         self.start()
         snake = SNAKE()
         food = FOOD()
-        animation_handler = ANIMATION_HANDLER()
+        animation_handler = HEAD_ANIMATION_HANDLER()
         food.generate_food(snake.body_grid)
         
         frame_counter = 0
         while self.running:
             move_time = frame_counter % FRAMES_PER_MOVE == 0
-            self.handle_events(move_time, snake)
+            self.handle_events(snake)
             
             if move_time:
                 self.front_update(snake, animation_handler)
