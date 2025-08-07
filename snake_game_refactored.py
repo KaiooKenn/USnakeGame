@@ -65,9 +65,12 @@ class SNAKE:
             self.direction.pop()  # Remove the tail direction
             self.body_pixels.pop() # Remove the tail pixel position
         return True # if not game over
-    
+
+    def blink(self):
+        from random import randint
+        if randint(0, 4) == 0:
+            self.wanted_animations.append("snake_blink")
         
-    
     # Animation for the snake
     def animate(self):
         for i in range(len(self.body_pixels)):
@@ -123,9 +126,8 @@ class SNAKE:
     def make_animation(self, active_animation):
         if not self.wanted_animations:
             return
-        print(f"Current wanted animations: {self.wanted_animations} and active animation: {active_animation}")
         animation_tiers = ["snake_blink", "snake_see", "snake_eat", "snake_xx"]
-        loop_animations = ["snake_see"]
+        loop_animations = ["snake_see", "snake_blink"]
         
         if not active_animation in animation_tiers and active_animation:
             return
@@ -173,7 +175,6 @@ class HEAD_ANIMATION_HANDLER:
         self.active_animation = name
         self.current_frame = 0
         self.frame_counter = 0
-        print(f"Animation added: {self.active_animation}")
 
         
     def update(self):
@@ -331,6 +332,7 @@ class Game:
             self.game_over = True
             self.running = False
         snake.has_seen(food.position)  # Check if the snake has seen the food
+        snake.blink()  # Check if the snake should blink
         snake.make_animation(animation_handler.active_animation)  # Make animation based on the current state
         if hasattr(snake, 'animation'):
             animation_handler.add_animation(self.graphics[snake.animation], str(snake.animation))  # Add the animation frames to the handler
