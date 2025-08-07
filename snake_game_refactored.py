@@ -166,25 +166,15 @@ class SNAKE:
         if not self.bulge_indexes: return
         index_slicer = (FRAMES_PER_MOVE) / len(graphics["bulge_body"])
         self.frame_count[index] += 1
-        if self.frame_count[index] >= FRAMES_PER_MOVE: 
-            self.frame_count[index] = 0
-            self.update_bulge_indexes()
+        if self.frame_count[index] >= FRAMES_PER_MOVE: self.frame_count[index] = 0
         current_frame = int(self.frame_count[index] // index_slicer)
         return graphics["bulge_body"][current_frame]
          
                     
     def update_bulge_indexes(self):
-        """
-        Yılanın şişkin segmentlerinin indekslerini günceller ve yönetir.
-        Bu metod, yılanın her hareket adımında bir kez çağrılır.
-        """
-        if not self.bulge_indexes:
-            return
-
+        if not self.bulge_indexes: return
         for i in range(len(self.bulge_indexes) - 1, -1, -1):
-            
             self.bulge_indexes[i] += 2
-
             if self.bulge_indexes[i] >= len(self.body_grid) - 1:
                 del self.bulge_indexes[i]
                 del self.frame_count[i]
