@@ -118,7 +118,7 @@ class SNAKE:
 
         # Draw the head last so it appears on top.
         center_pos = self.body_pixels[0] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)           
-        screen.blit(self.rotate(graphics["under_head"], self.direction[0]), graphics["under_head"].get_rect(center=center_pos))
+        screen.blit(self.rotate(graphics["under_head"], self.direction[1]), graphics["under_head"].get_rect(center=center_pos))
         screen.blit(self.rotate(graphics["snake_head"], self.l_direction), graphics["snake_head"].get_rect(center=center_pos))
         
     # --Body Drawing Logic--
