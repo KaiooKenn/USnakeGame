@@ -166,8 +166,12 @@ class SNAKE:
         if not self.bulge_indexes: return
         index_slicer = (FRAMES_PER_MOVE) / len(graphics["bulge_body"])
         self.frame_count[index] += 1
-        if self.frame_count[index] >= FRAMES_PER_MOVE: self.frame_count[index] = 0
+        if self.frame_count[index] > FRAMES_PER_MOVE: self.frame_count[index] = 0
         current_frame = int(self.frame_count[index] // index_slicer)
+        print(f'''frame_count was: {self.frame_count[index]}
+index_slicer was: {index_slicer}
+so decided to show: {current_frame}
+''')
         return graphics["bulge_body"][current_frame]
          
                     
