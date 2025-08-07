@@ -39,6 +39,8 @@ class SNAKE:
         # --State Attributes--
         self._is_growing = False           # A flag to check if the snake should grow on the next move.
         self.wanted_animations = []        # A temporary list to hold animation requests for the current frame.
+        self.bulge_indexes = []            # A list to hold the indexes of body segments to bulge in the "eat" animation.
+        self.frame_count = []
         
     # --Image Rotation Method--
     @staticmethod    
@@ -79,10 +81,13 @@ class SNAKE:
         self.body_grid.insert(0, new_head)
         self.direction.insert(0, self.direction[0])
         self.body_pixels.insert(0, self.body_pixels[0].copy())
+        self.update_bulge_indexes()
         
         # Handle snake growth.
         if self._is_growing:
             self.wanted_animations.append("snake_eat")  # Request the "eat" animation.
+            self.bulge_indexes.append(1)
+            self.frame_count.append(0)
             self._is_growing = False
         else:
             # If not growing, remove the tail segment.
@@ -91,7 +96,7 @@ class SNAKE:
             self.body_pixels.pop()
             
         return True # Movement was successful.
-
+        
     # --Blink Animation Request--
     def blink(self):
         """ Randomly requests a blink animation. """
@@ -118,7 +123,7 @@ class SNAKE:
 
         # Draw the head last so it appears on top.
         center_pos = self.body_pixels[0] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)           
-        screen.blit(self.rotate(graphics["under_head"], self.direction[0]), graphics["under_head"].get_rect(center=center_pos))
+        screen.blit(self.rotate(graphics["under_head"], self.direction[1]), graphics["under_head"].get_rect(center=center_pos))
         screen.blit(self.rotate(graphics["snake_head"], self.l_direction), graphics["snake_head"].get_rect(center=center_pos))
         
     # --Body Drawing Logic--
@@ -139,19 +144,45 @@ class SNAKE:
 
             if vec_from_head == vec_from_tail * -1:
                 # If vectors are opposite, it's a straight piece.
-                screen.blit(self.rotate(graphics["snake_body"], self.direction[i]), graphics["snake_body"].get_rect(center=center_pos))
+                image_to_draw = graphics["snake_body"]
+                if i in self.bulge_indexes: image_to_draw = self.get_bulge_image(graphics, self.bulge_indexes.index(i))
+                screen.blit(self.rotate(image_to_draw, self.direction[i]), graphics["snake_body"].get_rect(center=center_pos))
             else:
                 # Otherwise, it's a corner piece. Determine which corner it is.
                 turn_vectors = {(int(vec_from_head.x), int(vec_from_head.y)), 
                                 (int(vec_from_tail.x), int(vec_from_tail.y))}
                 image_to_draw = None
-                if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = graphics["body_corner"][0]  # Top Left
-                elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = graphics["body_corner"][1]  # Top Right
-                elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = graphics["body_corner"][2]  # Bottom Left
-                elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = graphics["body_corner"][3]  # Bottom Right
+                corner_set = "body_corner"
+                if i in self.bulge_indexes: corner_set = "bulge_corner"
+                if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = graphics[corner_set][0]  # Top Left
+                elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = graphics[corner_set][1]  # Top Right
+                elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = graphics[corner_set][2]  # Bottom Left
+                elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = graphics[corner_set][3]  # Bottom Right
 
                 if image_to_draw:
                     screen.blit(image_to_draw, image_to_draw.get_rect(center=center_pos))
+                    
+    def get_bulge_image(self, graphics, index):
+        if not self.bulge_indexes: return
+        index_slicer = (FRAMES_PER_MOVE) / len(graphics["bulge_body"])
+        self.frame_count[index] += 1
+        if self.frame_count[index] > FRAMES_PER_MOVE: self.frame_count[index] = 0
+        current_frame = int(self.frame_count[index] // index_slicer)
+        print(f'''frame_count was: {self.frame_count[index]}
+index_slicer was: {index_slicer}
+so decided to show: {current_frame}
+''')
+        return graphics["bulge_body"][current_frame]
+         
+                    
+    def update_bulge_indexes(self):
+        if not self.bulge_indexes: return
+        for i in range(len(self.bulge_indexes) - 1, -1, -1):
+            self.bulge_indexes[i] += 2
+            if self.bulge_indexes[i] >= len(self.body_grid) - 1:
+                del self.bulge_indexes[i]
+                del self.frame_count[i]
+        print(self.bulge_indexes)
                     
     # --"See" Animation Request--
     def has_seen(self, food_pos):
@@ -179,9 +210,9 @@ class SNAKE:
         if len(self.move_queue) < 2:
             self.move_queue.append(new_direction)
             
-# --HEAD_ANIMATION_HANDLER Class--
+# --ANIMATION_HANDLER Class--
 # Manages the state and logic for playing all head animations.
-class HEAD_ANIMATION_HANDLER:
+class ANIMATION_HANDLER:
     
     # --Animation Handler Initialization--
     def __init__(self):
@@ -238,6 +269,7 @@ class HEAD_ANIMATION_HANDLER:
                 # If so, reset the animation to play it again from the beginning.
                 self.current_frame = 0
                 self.frame_counter = 0
+        
         
     # --Update Animation State--
     def update(self):
@@ -335,6 +367,8 @@ class Game:
                 "background": pg.transform.scale(pg.image.load(resource_path("graphs/background.png")).convert(), (SCREEN_SIZE, SCREEN_SIZE)),
                 "food": pg.transform.scale(pg.image.load(resource_path("graphs/food.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
                 "snake_head": pg.transform.scale(pg.image.load(resource_path("graphs/snake_head.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
+                "bulge_body": [pg.transform.scale(pg.image.load(resource_path(f"graphs/bulge_body{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(3)],
+                "bulge_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/bulge_corner_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
                 "under_head": pg.transform.scale(pg.image.load(resource_path("graphs/under_head.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
                 "snake_body": pg.transform.scale(pg.image.load(resource_path("graphs/snake_body.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
                 "body_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/corner_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
@@ -367,6 +401,7 @@ class Game:
         for obj in args:
             # Pass the manipulatable image dictionary to the draw method.
             obj.draw(SCREEN, self.manipulated_images)
+            
             
     # --Event Handling--
     def handle_events(self, snake):
@@ -432,7 +467,7 @@ class Game:
         # Create instances of all game objects.
         snake = SNAKE()
         food = FOOD()
-        animation_handler = HEAD_ANIMATION_HANDLER()
+        animation_handler = ANIMATION_HANDLER()
         food.generate_food(snake.body_grid)
         
         frame_counter = 0
