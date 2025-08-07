@@ -276,7 +276,7 @@ class Game:
                 "body_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/body_eat{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(3)],
                 "eat_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/eat_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
                 "snake_dead": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_dead{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(2)] + ["finish"],
-                "snake_xx": pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))
+                "snake_xx": [pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))] + ["finish"]
             }
         except Exception as e:
             print(f"Error loading images: {e}")
@@ -329,8 +329,11 @@ class Game:
     # Check for the positions            
     def front_update(self, snake, animation_handler, food):
         if not snake.front_func():
-            self.game_over = True
-            self.running = False
+            animation_handler.add_animation(self.graphics["snake_xx"], "snake_xx")  # Add dead animation
+            if not hasattr(self, 'death_counter'):
+                self.death_counter = pg.time.get_ticks()  # Start the death counter
+        elif hasattr(self, 'death_counter'):
+            del self.death_counter  # Remove the death counter if the snake is still alive
         snake.has_seen(food.position)  # Check if the snake has seen the food
         snake.blink()  # Check if the snake should blink
         snake.make_animation(animation_handler.active_animation)  # Make animation based on the current state
@@ -375,6 +378,12 @@ class Game:
                 self.snake_eat(snake, food)
             animation_handler.update()
             self.handle_animations(animation_handler)
+            if hasattr(self, 'death_counter'):
+                print(f"Snake is dead, waiting for {pg.time.get_ticks() - self.death_counter} ms")
+                if pg.time.get_ticks() - self.death_counter > 100:
+                    self.game_over = True
+                    self.running = False
+                    return
                     
             snake.animate()        
             self.draw_objects(snake, food)
