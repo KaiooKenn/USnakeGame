@@ -386,6 +386,7 @@ class Game:
         FPS = 60
         FRAMES_PER_MOVE = 7
         SCORE = 0
+        
         # --Game State Variables--
         self.running = True
         self.game_over = False
@@ -394,6 +395,7 @@ class Game:
         self.graphics = self.load_images()
         self.sounds = self.load_sounds()
         self.font = pg.font.Font(resource_path("fonts/snake_game_font.ttf"), 28)
+        pg.display.set_icon(self.graphics["snake_see"][1])
         
         print("Game has started!")
         
@@ -540,7 +542,6 @@ class Game:
             animation_handler.update(frame_counter, len(self.graphics["body_bulge"]))
             if not animation_handler.active_animation:
                 animation_handler.add_animation(self.graphics, ["snake_dead"])
-            print(animation_handler.current_frame)
             if animation_handler.get_image():
                 SCREEN.blit(animation_handler.get_image(), animation_handler.get_image().get_rect(topleft = (0, 0)))
             pg.display.flip()
