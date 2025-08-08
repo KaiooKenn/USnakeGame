@@ -115,14 +115,14 @@ class SNAKE:
             self.body_pixels[i] = self.body_pixels[i].lerp(target_pixel_pos, 0.25)      
         
     # --Main Drawing Method--
-    def draw(self, screen, graphics):
+    def draw(self, screen, graphics, get_bulge_image):
         """ Draws the entire snake (tail, body, and head) onto the screen. """
         # Draw the tail first (it's at the end of the list).
         center_pos = self.body_pixels[-1] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
         screen.blit(self.rotate(graphics["snake_tail"], self.direction[-1]), graphics["snake_tail"].get_rect(center=center_pos))
         
         # Draw the body segments.
-        self.draw_body(screen, graphics)
+        self.draw_body(screen, graphics, get_bulge_image)
 
         # Draw the head last so it appears on top.
         center_pos = self.body_pixels[0] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)           
@@ -130,7 +130,7 @@ class SNAKE:
         screen.blit(self.rotate(graphics["snake_head"], self.l_direction), graphics["snake_head"].get_rect(center=center_pos))
         
     # --Body Drawing Logic--
-    def draw_body(self, screen, graphics):
+    def draw_body(self, screen, graphics, get_bulge_image):
         """ Draws the snake's body, correctly choosing between straight and corner pieces. """
         # Iterate through body segments, excluding the head (index 0) and tail (last index).
         for i in range(1, len(self.body_pixels) - 1):
@@ -147,16 +147,23 @@ class SNAKE:
 
             if vec_from_head == vec_from_tail * -1:
                 # If vectors are opposite, it's a straight piece.
-                screen.blit(self.rotate(graphics["snake_body"], self.direction[i]), graphics["snake_body"].get_rect(center=center_pos))
+                image_to_draw = graphics["snake_body"]
+                if i in self.bulge_indexes: 
+                    image_to_draw = get_bulge_image
+                    if image_to_draw is None:  # Check if image_to_draw is None
+                        image_to_draw = graphics["snake_body"]  # Use the default image if get_bulge_image returns None
+                screen.blit(self.rotate(image_to_draw, self.direction[i]), graphics["snake_body"].get_rect(center=center_pos))
             else:
                 # Otherwise, it's a corner piece. Determine which corner it is.
                 turn_vectors = {(int(vec_from_head.x), int(vec_from_head.y)), 
                                 (int(vec_from_tail.x), int(vec_from_tail.y))}
                 image_to_draw = None
-                if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = graphics["body_corner"][0]  # Top Left
-                elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = graphics["body_corner"][1]  # Top Right
-                elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = graphics["body_corner"][2]  # Bottom Left
-                elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = graphics["body_corner"][3]  # Bottom Right
+                corner_set = "body_corner"
+                if i in self.bulge_indexes: corner_set = "bulge_corner"
+                if turn_vectors == {(0, -1), (-1, 0)}: image_to_draw = graphics[corner_set][0]  # Top Left
+                elif turn_vectors == {(0, -1), (1, 0)}: image_to_draw = graphics[corner_set][1]  # Top Right
+                elif turn_vectors == {(0, 1), (-1, 0)}: image_to_draw = graphics[corner_set][2]  # Bottom Left
+                elif turn_vectors == {(0, 1), (1, 0)}: image_to_draw = graphics[corner_set][3]  # Bottom Right
 
                 if image_to_draw:
                     screen.blit(image_to_draw, image_to_draw.get_rect(center=center_pos))
@@ -267,7 +274,7 @@ class ANIMATION_HANDLER:
             self.frame_counter = 0
             
         index_slicer = FRAMES_PER_MOVE / len_b_frames
-        self.current_bulge_frame = self.game_class_frame_count // index_slicer
+        self.current_bulge_frame = int(self.game_class_frame_count // index_slicer)
                     
     # --Get Current Animation Image--
     def get_image(self):
@@ -385,12 +392,12 @@ class Game:
             sys.exit(1)
             
     # --Main Drawing Function--
-    def draw_objects(self, *args):
+    def draw_objects(self, snake, food, get_bulge_image):
         """ Clears the screen and draws all provided game objects. """
         SCREEN.blit(self.graphics["background"], (0, 0))
-        for obj in args:
-            # Pass the manipulatable image dictionary to the draw method.
-            obj.draw(SCREEN, self.manipulated_images)
+        snake.draw(SCREEN, self.manipulated_images, get_bulge_image)
+        food.draw(SCREEN, self.manipulated_images)
+        
             
     # --Event Handling--
     def handle_events(self, snake):
@@ -486,7 +493,7 @@ class Game:
             snake.animate() # Update the snake's visual pixel positions.
             
             # 3. Render (Draw)
-            self.draw_objects(snake, food)
+            self.draw_objects(snake, food, animation_handler.get_bulge_image(self.graphics["body_bulge"]))
             pg.display.flip()
             
             # 4. Tick the Clock
