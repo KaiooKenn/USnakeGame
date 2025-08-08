@@ -39,6 +39,7 @@ class SNAKE:
         # --State Attributes--
         self._is_growing = False           # A flag to check if the snake should grow on the next move.
         self.wanted_animations = []        # A temporary list to hold animation requests for the current frame.
+        self.bulge_indexes = []            # A list to hold the indexes of body segments to bulge.
         
     # --Image Rotation Method--
     @staticmethod    
@@ -80,8 +81,11 @@ class SNAKE:
         self.direction.insert(0, self.direction[0])
         self.body_pixels.insert(0, self.body_pixels[0].copy())
         
+        self.bulge_indexes = self.update_bulge_indexes(self.bulge_indexes)
+        
         # Handle snake growth.
         if self._is_growing:
+            self.bulge_indexes.append(1)
             self.wanted_animations.append("snake_eat")  # Request the "eat" animation.
             self._is_growing = False
         else:
@@ -91,6 +95,10 @@ class SNAKE:
             self.body_pixels.pop()
             
         return True # Movement was successful.
+
+    def update_bulge_indexes(self, bulge_indexes):
+        bulge_indexes = [i + 2 for i in bulge_indexes if i < len(self.body_grid)]
+        return bulge_indexes
 
     # --Blink Animation Request--
     def blink(self):
@@ -118,7 +126,7 @@ class SNAKE:
 
         # Draw the head last so it appears on top.
         center_pos = self.body_pixels[0] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)           
-        screen.blit(self.rotate(graphics["under_head"], self.direction[0]), graphics["under_head"].get_rect(center=center_pos))
+        screen.blit(self.rotate(graphics["under_head"], self.direction[1]), graphics["under_head"].get_rect(center=center_pos))
         screen.blit(self.rotate(graphics["snake_head"], self.l_direction), graphics["snake_head"].get_rect(center=center_pos))
         
     # --Body Drawing Logic--
@@ -133,7 +141,7 @@ class SNAKE:
             head_side_grid_pos = pg.Vector2(self.body_grid[i-1])
             tail_side_grid_pos = pg.Vector2(self.body_grid[i+1])
 
-            # Calculate vectors to determine if it's a straight or corner piece.
+            # Calculate vectors to determine if it's a straight or corner piece.s
             vec_from_head = head_side_grid_pos - current_grid_pos
             vec_from_tail = tail_side_grid_pos - current_grid_pos
 
@@ -179,15 +187,17 @@ class SNAKE:
         if len(self.move_queue) < 2:
             self.move_queue.append(new_direction)
             
-# --HEAD_ANIMATION_HANDLER Class--
+# --ANIMATION_HANDLER Class--
 # Manages the state and logic for playing all head animations.
-class HEAD_ANIMATION_HANDLER:
+class ANIMATION_HANDLER:
     
     # --Animation Handler Initialization--
-    def __init__(self):
+    def __init__(self, game_class_frame_count):
         self.animation_frames = []        # The list of images for the current animation.
         self.current_frame = 0            # The index of the current frame in the list.
+        self.current_bulge_frame = 0      # The index of the current bulge frame in the list.
         self.frame_counter = 0            # A counter to control animation speed.
+        self.game_class_frame_count = game_class_frame_count
         self.animation_speed = 10         # Number of game frames to wait before showing the next animation frame.
         self.active_animation = None      # The name of the animation currently playing.
     
@@ -240,11 +250,12 @@ class HEAD_ANIMATION_HANDLER:
                 self.frame_counter = 0
         
     # --Update Animation State--
-    def update(self):
+    def update(self, game_class_frame_count, len_b_frames):
         """ Advances the animation to the next frame if enough time has passed. """
         if not self.animation_frames:
             return
         
+        self.game_class_frame_count = game_class_frame_count
         self.frame_counter += 1
         
         if self.frame_counter >= self.animation_speed:
@@ -254,12 +265,23 @@ class HEAD_ANIMATION_HANDLER:
                 self.animation_frames = []
                 self.active_animation = None
             self.frame_counter = 0
-        
+            
+        index_slicer = FRAMES_PER_MOVE / len_b_frames
+        self.current_bulge_frame = self.current_frame // index_slicer
+                    
     # --Get Current Animation Image--
     def get_image(self):
         """ Returns the pygame.Surface for the current animation frame, or None. """
         if self.animation_frames:
             image = self.animation_frames[self.current_frame]
+            if isinstance(image, pg.Surface):
+                return image
+        return None
+    
+    def get_bulge_image(self, bulge_body: list[pg.Surface]):
+        """ Returns the pygame.Surface for the current bulge frame, or None. """
+        if self.animation_frames:
+            image = bulge_body[self.current_bulge_frame]
             if isinstance(image, pg.Surface):
                 return image
         return None
@@ -429,13 +451,13 @@ class Game:
     def run(self):
         """ Contains the main loop that runs the entire game. """
         self.start()
+        frame_counter = 0
         # Create instances of all game objects.
         snake = SNAKE()
         food = FOOD()
-        animation_handler = HEAD_ANIMATION_HANDLER()
+        animation_handler = ANIMATION_HANDLER(frame_counter)
         food.generate_food(snake.body_grid)
         
-        frame_counter = 0
         while self.running:
             # A flag to check if it's time for the snake to move one grid step.
             move_time = frame_counter % FRAMES_PER_MOVE == 0
@@ -445,10 +467,11 @@ class Game:
             
             # 2. Update Game State (Logic)
             if move_time:
+                frame_counter =                                                                                      0
                 self.front_update(snake, animation_handler, food)
                 self.snake_eat(snake, food)
 
-            animation_handler.update()
+            animation_handler.update(frame_counter)
             self.handle_animations(animation_handler)
             
             # If the death timer is active, check if enough time has passed to end the game.
