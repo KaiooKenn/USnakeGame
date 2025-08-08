@@ -315,6 +315,49 @@ class FOOD:
         """ Draws the food item on the screen. """
         center_pos = pg.Vector2(self.position) * GRID_SIZE + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
         screen.blit(graphics["food"], graphics["food"].get_rect(center=center_pos))
+        
+class SOUND_PLAYER:
+    def __init__(self, sounds):
+        self.sounds = sounds
+        self.index = 0
+        self.MELODY = [
+    'B4', 'A4', 'G#4', 'A4', 'C5',
+    'D5', 'C5', 'B4', 'C5', 'E5',
+    'F5', 'E5', 'D#5', 'E5',
+    'B5', 'A5', 'G#5', 'A5', 'B5', 'A5', 'G#5', 'A5', 'C6',
+    'A5', 'C6', 'G5', 'A5', 'B5', 'A5',
+    'G5', 'A5', 'G5', 'A5', 'B5', 'A5',
+    'G5', 'A5', 'G5', 'A5', 'B5', 'A5', 'G5', 'F#5', 'E5',
+
+    'E5', 'F5', 'G5', 'G5', 'A5', 'G5', 'F5', 'E5', 'D5',
+    'E5', 'F5', 'G5', 'G5', 'A5', 'G5', 'F5', 'E5', 'D5',
+    'C5', 'D5', 'E5', 'E5', 'F5', 'E5', 'D5', 'C5', 'B4',
+    'C5', 'D5', 'E5', 'E5', 'F5', 'E5', 'D5', 'C5', 'B4',
+
+    'B4', 'A4', 'G#4', 'A4', 'C5',
+    'D5', 'C5', 'B4', 'C5', 'E5',
+    'F5', 'E5', 'D#5', 'E5',
+    'B5', 'A5', 'G#5', 'A5', 'B5', 'A5', 'G#5', 'A5', 'C6',
+
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'G#5', 'A5', 'B5', 'G#5', 'E5',
+
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'B5', 'G#5', 'E5', 'A5',
+
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'G#5', 'A5', 'B5', 'G#5', 'E5',
+
+    'A5', 'B5', 'C#6', 'A5', 'B5', 'C#6',
+    'B5', 'A5', 'G#5', 'F#5', 'B5', 'G#5', 'E5', 'A5'
+]
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        self.index = (self.index + 1) % len(self.MELODY)
+        return self.sounds[self.MELODY[self.index]]
+        
             
 # --GAME Class--
 # The main class that runs the game loop and manages all game objects and states.
@@ -383,7 +426,22 @@ class Game:
         print("Loading sounds...")
         try:
             return {
-                "A4": pg.mixer.Sound(resource_path("music_notes/A4.wav")), "A5": pg.mixer.Sound(resource_path("music_notes/A5.wav")), "B4": pg.mixer.Sound(resource_path("music_notes/B4.wav")), "B5": pg.mixer.Sound(resource_path("music_notes/B5.wav")), "C5": pg.mixer.Sound(resource_path("music_notes/C5.wav")), "C6": pg.mixer.Sound(resource_path("music_notes/C6.wav")), "C#6": pg.mixer.Sound(resource_path("music_notes/Cb6.wav")), "D5": pg.mixer.Sound(resource_path("music_notes/D5.wav")), "D#5": pg.mixer.Sound(resource_path("music_notes/Db5.wav")), "E5": pg.mixer.Sound(resource_path("music_notes/E5.wav")), "F5": pg.mixer.Sound(resource_path("music_notes/F5.wav")), "F#5": pg.mixer.Sound(resource_path("music_notes/Fb5.wav")), "G5": pg.mixer.Sound(resource_path("music_notes/G5.wav")), "G#4": pg.mixer.Sound(resource_path("music_notes/Gb4.wav")), "G#5": pg.mixer.Sound(resource_path("music_notes/Gb5.wav")), "C1": pg.mixer.Sound(resource_path("music_notes/C1.wav"))
+                "A4": pg.mixer.Sound(resource_path("music_notes/A4.wav")), 
+                "A5": pg.mixer.Sound(resource_path("music_notes/A5.wav")), 
+                "B4": pg.mixer.Sound(resource_path("music_notes/B4.wav")), 
+                "B5": pg.mixer.Sound(resource_path("music_notes/B5.wav")), 
+                "C5": pg.mixer.Sound(resource_path("music_notes/C5.wav")), 
+                "C6": pg.mixer.Sound(resource_path("music_notes/C6.wav")), 
+                "C#6": pg.mixer.Sound(resource_path("music_notes/Cb6.wav")), 
+                "D5": pg.mixer.Sound(resource_path("music_notes/D5.wav")),
+                "D#5": pg.mixer.Sound(resource_path("music_notes/Db5.wav")), 
+                "E5": pg.mixer.Sound(resource_path("music_notes/E5.wav")), 
+                "F5": pg.mixer.Sound(resource_path("music_notes/F5.wav")), 
+                "F#5": pg.mixer.Sound(resource_path("music_notes/Fb5.wav")), 
+                "G5": pg.mixer.Sound(resource_path("music_notes/G5.wav")), 
+                "G#4": pg.mixer.Sound(resource_path("music_notes/Gb4.wav")), 
+                "G#5": pg.mixer.Sound(resource_path("music_notes/Gb5.wav")), 
+                "C1": pg.mixer.Sound(resource_path("music_notes/C1.wav"))
             }
         except Exception as e:
             print(f"Error loading sounds: {e}")
@@ -396,9 +454,14 @@ class Game:
         snake.draw(SCREEN, self.graphics, get_bulge_image, get_image)
         food.draw(SCREEN, self.graphics)
         
+    def playing_sound(self, sound_player):
+        next_sound = next(sound_player)
+        pg.mixer.stop()
+        next_sound.play()
+         
             
     # --Event Handling--
-    def handle_events(self, snake):
+    def handle_events(self, snake, sound_player):
         """ Processes user input and other game events. """
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -418,7 +481,7 @@ class Game:
                 elif event.key in [pg.K_RIGHT, pg.K_d]: 
                     snake.change_direction((1, 0))
                     play_sound = True
-                # if play_sound: self.play_sound()
+                if play_sound: self.playing_sound(sound_player)
                  
     # --Main Logic Update Function--
     def front_update(self, snake, animation_handler, food):
@@ -472,6 +535,7 @@ class Game:
         # Create instances of all game objects.
         snake = SNAKE()
         food = FOOD()
+        sound_player = SOUND_PLAYER(self.sounds)
         animation_handler = ANIMATION_HANDLER(frame_counter)
         food.generate_food(snake.body_grid)
         
@@ -480,11 +544,11 @@ class Game:
             move_time = frame_counter % FRAMES_PER_MOVE == 0
             
             # 1. Handle Events (Input)
-            self.handle_events(snake)
+            self.handle_events(snake, sound_player)
             
             # 2. Update Game State (Logic)
             if move_time:
-                frame_counter =                                                                                      0
+                frame_counter = 0
                 self.front_update(snake, animation_handler, food)
                 self.snake_eat(snake, food)
 
