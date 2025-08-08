@@ -115,7 +115,7 @@ class SNAKE:
             self.body_pixels[i] = self.body_pixels[i].lerp(target_pixel_pos, 0.25)      
         
     # --Main Drawing Method--
-    def draw(self, screen, graphics, get_bulge_image):
+    def draw(self, screen, graphics, get_bulge_image, get_image):
         """ Draws the entire snake (tail, body, and head) onto the screen. """
         # Draw the tail first (it's at the end of the list).
         center_pos = self.body_pixels[-1] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)
@@ -127,7 +127,7 @@ class SNAKE:
         # Draw the head last so it appears on top.
         center_pos = self.body_pixels[0] + pg.Vector2(GRID_SIZE // 2, GRID_SIZE // 2)           
         screen.blit(self.rotate(graphics["under_head"], self.direction[1]), graphics["under_head"].get_rect(center=center_pos))
-        screen.blit(self.rotate(graphics["snake_head"], self.l_direction), graphics["snake_head"].get_rect(center=center_pos))
+        screen.blit(self.rotate(get_image, self.l_direction), graphics["snake_head"].get_rect(center=center_pos))
         
     # --Body Drawing Logic--
     def draw_body(self, screen, graphics, get_bulge_image):
@@ -349,9 +349,6 @@ class Game:
         # Load all graphics into a dictionary.
         self.graphics = self.load_images()
         
-        # Create a dictionary of images that can be manipulated during the game (e.g., for animations).
-        self.manipulated_images = self.graphics.copy()
-        
         print("Game has started!")
         
     # --Asset Loading Methods--
@@ -392,11 +389,11 @@ class Game:
             sys.exit(1)
             
     # --Main Drawing Function--
-    def draw_objects(self, snake, food, get_bulge_image):
+    def draw_objects(self, snake, food, get_bulge_image, get_image):
         """ Clears the screen and draws all provided game objects. """
         SCREEN.blit(self.graphics["background"], (0, 0))
-        snake.draw(SCREEN, self.manipulated_images, get_bulge_image)
-        food.draw(SCREEN, self.manipulated_images)
+        snake.draw(SCREEN, self.graphics, get_bulge_image, get_image)
+        food.draw(SCREEN, self.graphics)
         
             
     # --Event Handling--
@@ -446,15 +443,15 @@ class Game:
             print(f"Score: {SCORE}")
             
     # --Animation Image Handling--
-    def handle_animations(self, animation_handler):
+    def get_head_image(self, animation_handler):
         """ Updates the snake head image based on the current animation frame. """
         animated_image = animation_handler.get_image()
         if animated_image:
             # If an animation is playing, use its frame for the snake head.
-            self.manipulated_images["snake_head"] = animated_image
+            return animated_image
         else:
             # Otherwise, use the default snake head image.
-            self.manipulated_images["snake_head"] = self.graphics["snake_head"]
+            return self.graphics["snake_head"]
                 
     # --Main Game Loop--
     def run(self):
@@ -481,7 +478,6 @@ class Game:
                 self.snake_eat(snake, food)
 
             animation_handler.update(frame_counter, len(self.graphics["body_bulge"]))
-            self.handle_animations(animation_handler)
             
             # If the death timer is active, check if enough time has passed to end the game.
             if hasattr(self, 'death_counter'):
@@ -493,7 +489,7 @@ class Game:
             snake.animate() # Update the snake's visual pixel positions.
             
             # 3. Render (Draw)
-            self.draw_objects(snake, food, animation_handler.get_bulge_image(self.graphics["body_bulge"]))
+            self.draw_objects(snake, food, animation_handler.get_bulge_image(self.graphics["body_bulge"]), self.get_head_image(animation_handler))
             pg.display.flip()
             
             # 4. Tick the Clock
