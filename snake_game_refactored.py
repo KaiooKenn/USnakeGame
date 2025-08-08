@@ -530,6 +530,21 @@ class Game:
         else:
             # Otherwise, use the default snake head image.
             return self.graphics["snake_head"]
+        
+    def game_over_screen(self, animation_handler, frame_counter):
+        animation_handler.add_animation(self.graphics, ["snake_dead"])
+        from random import randint
+        animation_handler.animation_speed = randint(240, 300)
+        dead_time = pg.time.get_ticks()
+        while pg.time.get_ticks() - dead_time < 1500:
+            animation_handler.update(frame_counter, len(self.graphics["body_bulge"]))
+            if not animation_handler.active_animation:
+                animation_handler.add_animation(self.graphics, ["snake_dead"])
+            print(animation_handler.current_frame)
+            if animation_handler.get_image():
+                SCREEN.blit(animation_handler.get_image(), animation_handler.get_image().get_rect(topleft = (0, 0)))
+            pg.display.flip()
+        self.running = False
                 
     # --Main Game Loop--
     def run(self):
@@ -570,19 +585,7 @@ class Game:
             pg.display.flip()
             
             if self.game_over:
-                animation_handler.add_animation(self.graphics, ["snake_dead"])
-                from random import randint
-                animation_handler.animation_speed = randint(240, 300)
-                dead_time = pg.time.get_ticks()
-                while pg.time.get_ticks() - dead_time < 1500:
-                    animation_handler.update(frame_counter, len(self.graphics["body_bulge"]))
-                    if not animation_handler.active_animation:
-                        animation_handler.add_animation(self.graphics, ["snake_dead"])
-                    print(animation_handler.current_frame)
-                    if animation_handler.get_image():
-                        SCREEN.blit(animation_handler.get_image(), animation_handler.get_image().get_rect(topleft = (0, 0)))
-                    pg.display.flip()
-                self.running = False
+                self.game_over_screen(animation_handler, frame_counter)
             
             # 4. Tick the Clock
             CLOCK.tick(FPS)
