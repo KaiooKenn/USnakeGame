@@ -348,6 +348,7 @@ class Game:
         
         # Load all graphics into a dictionary.
         self.graphics = self.load_images()
+        self.sounds = self.load_sounds()
         
         print("Game has started!")
         
@@ -404,11 +405,21 @@ class Game:
                 self.running = False
             # Handle direction changes from keyboard input.
             if event.type == pg.KEYDOWN:
-                if event.key in [pg.K_UP, pg.K_w]: snake.change_direction((0, -1))
-                elif event.key in [pg.K_DOWN, pg.K_s]: snake.change_direction((0, 1))
-                elif event.key in [pg.K_LEFT, pg.K_a]: snake.change_direction((-1, 0))
-                elif event.key in [pg.K_RIGHT, pg.K_d]: snake.change_direction((1, 0))
-                
+                play_sound = False
+                if event.key in [pg.K_UP, pg.K_w]: 
+                    snake.change_direction((0, -1)) 
+                    play_sound = True
+                elif event.key in [pg.K_DOWN, pg.K_s]: 
+                    snake.change_direction((0, 1))
+                    play_sound = True
+                elif event.key in [pg.K_LEFT, pg.K_a]: 
+                    snake.change_direction((-1, 0))
+                    play_sound = True
+                elif event.key in [pg.K_RIGHT, pg.K_d]: 
+                    snake.change_direction((1, 0))
+                    play_sound = True
+                # if play_sound: self.play_sound()
+                 
     # --Main Logic Update Function--
     def front_update(self, snake, animation_handler, food):
         """ Updates the core game state based on a move tick. """
