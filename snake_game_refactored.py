@@ -267,7 +267,7 @@ class ANIMATION_HANDLER:
             self.frame_counter = 0
             
         index_slicer = FRAMES_PER_MOVE / len_b_frames
-        self.current_bulge_frame = self.current_frame // index_slicer
+        self.current_bulge_frame = self.game_class_frame_count // index_slicer
                     
     # --Get Current Animation Image--
     def get_image(self):
@@ -359,6 +359,8 @@ class Game:
                 "snake_head": pg.transform.scale(pg.image.load(resource_path("graphs/snake_head.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)),
                 "under_head": pg.transform.scale(pg.image.load(resource_path("graphs/under_head.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
                 "snake_body": pg.transform.scale(pg.image.load(resource_path("graphs/snake_body.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
+                "body_bulge": [pg.transform.scale(pg.image.load(resource_path(f"graphs/body_bulge{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in range(3)],
+                "bulge_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/bulge_corner_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
                 "body_corner": [pg.transform.scale(pg.image.load(resource_path(f"graphs/corner_{i}.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)) for i in ["tl", "tr", "bl", "br"]],
                 "snake_tail": pg.transform.scale(pg.image.load(resource_path("graphs/snake_tail.png")).convert_alpha(), (GRID_SIZE, GRID_SIZE)),
                 "snake_blink": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_blink{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(2)] + ["finish"],
@@ -471,7 +473,7 @@ class Game:
                 self.front_update(snake, animation_handler, food)
                 self.snake_eat(snake, food)
 
-            animation_handler.update(frame_counter)
+            animation_handler.update(frame_counter, len(self.graphics["body_bulge"]))
             self.handle_animations(animation_handler)
             
             # If the death timer is active, check if enough time has passed to end the game.
