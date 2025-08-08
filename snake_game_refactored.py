@@ -6,6 +6,7 @@ import sys
 # --Initialize Pygame--
 # This must be called to initialize all the Pygame modules.
 pg.init()
+pg.mixer.init()
 
 # --Helper Function for File Paths--
 def resource_path(relative_path):
@@ -219,7 +220,7 @@ class ANIMATION_HANDLER:
             return
 
         # 1. Define animation categories and priorities.
-        animation_tiers = ["snake_blink", "snake_see", "snake_eat", "snake_xx"]
+        animation_tiers = ["snake_blink", "snake_see", "snake_eat", "snake_xx", "snake_dead"]
         one_shot_animations = {"snake_eat", "snake_xx"} # Animations that should reset if triggered again.
 
         # 2. Find the highest-priority animation requested in the current frame.
@@ -380,11 +381,11 @@ class Game:
         # --Global Game Dependencies--
         global SCREEN, CLOCK, FPS, FRAMES_PER_MOVE, SCORE
         SCREEN = pg.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
+        pg.display.set_caption("Snake Game")
         CLOCK = pg.time.Clock()
         FPS = 60
         FRAMES_PER_MOVE = 7
         SCORE = 0
-        
         # --Game State Variables--
         self.running = True
         self.game_over = False
@@ -415,6 +416,7 @@ class Game:
                 "snake_blink": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_blink{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(2)] + ["finish"],
                 "snake_see": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_see{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(3)] + ["finish"],
                 "snake_eat": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_eat{i}.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE)) for i in range(4)] + ["finish"],
+                "snake_dead": [pg.transform.scale(pg.image.load(resource_path(f"graphs/snake_dead{i}.png")).convert_alpha(), (SCREEN_SIZE, SCREEN_SIZE)) for i in range(2)] + ["finish"], 
                 "snake_xx": [pg.transform.scale(pg.image.load(resource_path("graphs/snake_xx.png")).convert_alpha(), (HEAD_SIZE, HEAD_SIZE))] + ["finish"]
             }
         except Exception as e:
@@ -560,14 +562,27 @@ class Game:
             if hasattr(self, 'death_counter'):
                 if pg.time.get_ticks() - self.death_counter > 100:
                     self.game_over = True
-                    self.running = False
-                    return
                     
             snake.animate() # Update the snake's visual pixel positions.
             
             # 3. Render (Draw)
             self.draw_objects(snake, food, animation_handler.get_bulge_image(self.graphics["body_bulge"]), self.get_head_image(animation_handler))
             pg.display.flip()
+            
+            if self.game_over:
+                animation_handler.add_animation(self.graphics, ["snake_dead"])
+                from random import randint
+                animation_handler.animation_speed = randint(240, 300)
+                dead_time = pg.time.get_ticks()
+                while pg.time.get_ticks() - dead_time < 1500:
+                    animation_handler.update(frame_counter, len(self.graphics["body_bulge"]))
+                    if not animation_handler.active_animation:
+                        animation_handler.add_animation(self.graphics, ["snake_dead"])
+                    print(animation_handler.current_frame)
+                    if animation_handler.get_image():
+                        SCREEN.blit(animation_handler.get_image(), animation_handler.get_image().get_rect(topleft = (0, 0)))
+                    pg.display.flip()
+                self.running = False
             
             # 4. Tick the Clock
             CLOCK.tick(FPS)
