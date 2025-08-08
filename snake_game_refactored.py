@@ -392,6 +392,7 @@ class Game:
         # Load all graphics into a dictionary.
         self.graphics = self.load_images()
         self.sounds = self.load_sounds()
+        self.font = pg.font.Font(resource_path("fonts/snake_game_font.ttf"), 28)
         
         print("Game has started!")
         
@@ -451,8 +452,9 @@ class Game:
     def draw_objects(self, snake, food, get_bulge_image, get_image):
         """ Clears the screen and draws all provided game objects. """
         SCREEN.blit(self.graphics["background"], (0, 0))
-        snake.draw(SCREEN, self.graphics, get_bulge_image, get_image)
         food.draw(SCREEN, self.graphics)
+        snake.draw(SCREEN, self.graphics, get_bulge_image, get_image)
+        SCREEN.blit(self.font.render(f"Score: {SCORE}", True, (149, 197, 111)), (10, 10))
         
     def playing_sound(self, sound_player):
         next_sound = next(sound_player)
